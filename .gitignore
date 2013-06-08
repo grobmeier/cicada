@@ -1,0 +1,4 @@
+cicada/log
+.vagrant
+composer.lock
+cicada/vendor
