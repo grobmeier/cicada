@@ -3,6 +3,7 @@
 namespace Cicada\Routing;
 
 use Exception;
+use ReflectionFunction;
 
 class Router {
     private $routeMap = array();
@@ -21,7 +22,16 @@ class Router {
             if ($route->matches($url)) {
                 return function() use ($route) {
                     $action = $route->getAction();
-                    return $action();
+
+                    $matches = $route->getMatches();
+                    foreach ($matches as $key => $value) {
+                        if (is_int($key)) {
+                            unset($matches[$key]);
+                        }
+                    }
+
+                    $function = new ReflectionFunction($action);
+                    return $function->invokeArgs($matches);
                 };
             }
         }

@@ -15,10 +15,7 @@ class Route {
 
     public function matches($url) {
         $this->matches = array();
-
-        $result = preg_match_all($this->route, $url, $this->matches);
-
-        print_r($this->matches);
+        $result = preg_match_all($this->route, $url, $this->matches, PREG_SET_ORDER);
         return ($result != 0 && $result != false);
     }
 
@@ -26,7 +23,7 @@ class Route {
      * @return mixed
      */
     public function getMatches() {
-        return $this->matches;
+        return $this->matches[0];
     }
 
     public function getAction() {
