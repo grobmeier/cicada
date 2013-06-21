@@ -1,5 +1,7 @@
 <?php
 
+use Cicada\Action;
+use Cicada\Auth\LoginAction;
 use Cicada\Responses\EchoResponse;
 use Cicada\Responses\PhpResponse;
 use Cicada\Validators\StringLengthValidator;
@@ -27,10 +29,25 @@ get('/\/login$/', function() {
 });
 
 get('/\/login\/do$/', function() {
-    $username = $_POST["username"];
-    $password = $_POST["password"];
+    global $config;
 
-    return new PhpResponse('auth/login.php', array("username" => $username));
+    $username = readPost('username');
+    $password = readPost('password');
+
+    $action = new LoginAction($username, $password);
+    $action->setUserProvider($config['userProvider']);
+    $result = $action->execute();
+
+    if ($result == Action::SUCCESS) {
+
+        // TODO after storing user in session
+        //$echo = new EchoResponse();
+        // $echo->addHeader("Location: /admin/dashboard");
+        return new EchoResponse("OK");
+
+    } else {
+        return new PhpResponse('auth/login.php', array("username" => $username));
+    }
 })
     ->allowField("username", array( new StringLengthValidator(20) ))
     ->allowField("password", array( new StringLengthValidator(20) ));

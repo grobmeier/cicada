@@ -25,3 +25,12 @@ function get($pattern, $action) {
     Router::getInstance()->addRoute($route);
     return $route;
 }
+
+function readPost($key, $default = "") {
+    if (isset ($_POST[$key])) {
+        $value = $_POST[$key];
+    } else {
+        $value = $default;
+    }
+    return $value;
+}

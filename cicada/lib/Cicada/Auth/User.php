@@ -24,6 +24,10 @@ class User {
         return $this->username;
     }
 
+    public function getPassword() {
+        return $this->password;
+    }
+
     public function hasRole(Role $role) {
         /** @var Role $userRole */
         foreach ($this->roles as $userRole) {

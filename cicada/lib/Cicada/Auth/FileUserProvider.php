@@ -13,6 +13,7 @@ class FileUserProvider implements UserProvider {
 
     public function getUser($name) {
         $users = $this->users;
+
         /** @var $user User */
         foreach ($users as $user) {
             if ($name == $user->getUsername()) {
