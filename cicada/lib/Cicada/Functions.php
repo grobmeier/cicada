@@ -23,4 +23,5 @@ function forward($path) {
 function get($pattern, $action) {
     $route = new Route($pattern, $action);
     Router::getInstance()->addRoute($route);
+    return $route;
 }
