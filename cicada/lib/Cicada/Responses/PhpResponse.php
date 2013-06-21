@@ -7,7 +7,7 @@ class PhpResponse extends AbstractResponse {
     private $templateFile;
     private $values;
 
-    function __construct($templateFile, $values) {
+    function __construct($templateFile, $values = array()) {
         $this->templateFile = $templateFile;
         $this->values = $values;
     }
