@@ -1,7 +1,7 @@
 <?php
 namespace Cicada\Responses;
 
-class EchoResponse implements Response {
+class EchoResponse extends AbstractResponse {
     private $message;
 
     function __construct($message) {

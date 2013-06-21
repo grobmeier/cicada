@@ -3,7 +3,7 @@ namespace Cicada\Responses;
 
 use Cicada\Templates\Php\PhpTemplate;
 
-class PhpResponse implements Response {
+class PhpResponse extends AbstractResponse {
     private $templateFile;
     private $values;
 
