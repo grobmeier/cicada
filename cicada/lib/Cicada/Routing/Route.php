@@ -5,18 +5,13 @@ namespace Cicada\Routing;
 class Route {
     private $route;
     private $action;
-
     private $matches;
+
+    use Url;
 
     function __construct($route, $action) {
         $this->action = $action;
         $this->route = $route;
-    }
-
-    public function matches($url) {
-        $this->matches = array();
-        $result = preg_match_all($this->route, $url, $this->matches, PREG_SET_ORDER);
-        return ($result != 0 && $result != false);
     }
 
     /**
@@ -28,5 +23,13 @@ class Route {
 
     public function getAction() {
         return $this->action;
+    }
+
+    public function getRoute() {
+        return $this->route;
+    }
+
+    public function setMatches($matches) {
+        $this->matches = $matches;
     }
 }

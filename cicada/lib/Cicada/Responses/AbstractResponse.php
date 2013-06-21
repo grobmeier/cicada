@@ -11,7 +11,7 @@ abstract class AbstractResponse implements Response {
     }
 
     public function addHeader($header) {
-        array_push($this->header, $header);
+        array_push($this->headers, $header);
     }
 
     public abstract function serialize();
