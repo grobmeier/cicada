@@ -1,4 +1,5 @@
 <?php
+use Cicada\Responses\Response;
 use Cicada\Routing\Router;
 
 define('CLASS_DIR', 'lib/');
@@ -23,7 +24,15 @@ foreach ($config['routes'] as $routeFile) {
 
 try {
     $response = Router::getInstance()->route($_GET['url']);
-    echo $response()->serialize();
+    /** @var Response $executed */
+    $executed = $response();
+    $headers = $executed->headers();
+    if ($headers != null) {
+        foreach ($headers as $header) {
+             header($header);
+        }
+    }
+    echo $executed->serialize();
 } catch (Exception $e) {
     echo $e->getTraceAsString();
 }
