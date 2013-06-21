@@ -33,6 +33,8 @@ try {
         }
     }
     echo $executed->serialize();
+} catch (UnexpectedValueException $e) {
+    echo $e->getMessage();
 } catch (Exception $e) {
     echo $e->getTraceAsString();
 }
