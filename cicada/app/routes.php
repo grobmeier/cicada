@@ -32,8 +32,8 @@ get('/\/login\/do$/', function() {
 
     return new PhpResponse('auth/login.php', array("username" => $username));
 })
-    ->allowField("username", array( new StringLengthValidator(5) ))
-    ->allowField("password");
+    ->allowField("username", array( new StringLengthValidator(20) ))
+    ->allowField("password", array( new StringLengthValidator(20) ));
 
 get('/\/phptemplate\/(?<name>.*)$/', function($name) {
     return new PhpResponse('helloworld.php', array( 'name' => $name, 'ups' => 'huhu'));
