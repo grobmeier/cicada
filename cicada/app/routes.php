@@ -60,4 +60,5 @@ get('/\/admin\/dashboard$/', function() {
     return new EchoResponse("You are seeing the dashboard");
 });
 
+get('/\/admin/', forward('/admin/dashboard'));
 get('/\//', forward('/hello/world'));
