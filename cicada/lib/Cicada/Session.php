@@ -17,6 +17,10 @@ class Session {
         return isset($_SESSION[$key]) ? $_SESSION[$key] : null;
     }
 
+    public function destroy() {
+        session_unset();
+    }
+
     public static function getInstance() {
         if (self::$instance == null) {
             self::$instance = new Session();

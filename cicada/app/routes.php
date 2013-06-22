@@ -2,6 +2,7 @@
 
 use Cicada\Action;
 use Cicada\Auth\LoginAction;
+use Cicada\Auth\LogoutAction;
 use Cicada\Configuration;
 use Cicada\Responses\EchoResponse;
 use Cicada\Responses\PhpResponse;
@@ -22,6 +23,11 @@ get('/\/hello\/(?<name>.*)\/(?<blub>.*)$/', function($name, $blub) {
 
 get('/\/hello\/(?<name>.*)$/', function($name) {
     return new EchoResponse("Hello Parameter: " .$name);
+});
+
+get('/\/logout$/', function() {
+    (new LogoutAction())->execute();
+    return new PhpResponse('auth/login.php');
 });
 
 get('/\/login$/', function() {
@@ -52,7 +58,7 @@ get('/\/phptemplate\/(?<name>.*)$/', function($name) {
 });
 
 get('/\/admin\/dashboard$/', function() {
-    return new EchoResponse("You are seeing the dashboard");
+    return new EchoResponse('You are seeing the dashboard. <a href="/logout">Logout</a>');
 });
 
 get('/\/admin/', forward('/admin/dashboard'));
