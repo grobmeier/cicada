@@ -9,7 +9,7 @@ use Cicada\Validators\StringLengthValidator;
 
 protect('/\/admin\/.*$/', config('userProvider'))
     ->allowRoles(array("admin"))
-    ->allowUsers(array("anne"))
+    ->allowUsers(array("anna"))
     ->setOnFail(forward('/login'));
 
 get('/\/hello\/world$/', function() {
