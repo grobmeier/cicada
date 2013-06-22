@@ -2,7 +2,9 @@
 
 namespace Cicada\Routing;
 
+use Cicada\Auth\LoginAction;
 use Cicada\Responses\EchoResponse;
+use Cicada\Session;
 use Exception;
 use ReflectionFunction;
 
@@ -28,7 +30,7 @@ class Router {
         foreach ($this->protectors as $protector) {
 
             if ($protector->matches($url)) {
-                $resultFunction = $this->protect($protector, $url);
+                $resultFunction = $this->protect($protector);
 
                 if ($resultFunction != null) {
                     return $resultFunction;
@@ -59,10 +61,21 @@ class Router {
         throw new Exception("No match for route");
     }
 
-    public function protect(Protector $protector, $url) {
-        // is user logged in?
+    /**
+     * Returns an action function, if the user is not allowed to proceed,
+     * or null, if the user is allowed to proceed.
+     *
+     * @param Protector $protector
+     * @return callable|mixed|null
+     */
+    public function protect(Protector $protector) {
+        $user = Session::getInstance()->get(LoginAction::CICADA_USER);
 
-        // if not:
+        if ($user != null) {
+            if ($protector->isUserAllowed($user)) {
+                return null;
+            }
+        }
 
         $onFail = $protector->getOnFail();
         if($onFail != null) {

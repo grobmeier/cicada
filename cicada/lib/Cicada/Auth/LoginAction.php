@@ -2,8 +2,10 @@
 namespace Cicada\Auth;
 
 use Cicada\Action;
+use Cicada\Session;
 
 class LoginAction extends Action {
+    const CICADA_USER = 'cicada.user';
 
     private $username;
     private $password;
@@ -22,6 +24,7 @@ class LoginAction extends Action {
         }
 
         if ($this->password == $user->getPassword()) {
+            Session::getInstance()->add(self::CICADA_USER, $user);
             return self::SUCCESS;
         }
         return self::ERROR;

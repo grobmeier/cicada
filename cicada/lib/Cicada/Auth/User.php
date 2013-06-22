@@ -28,10 +28,23 @@ class User {
         return $this->password;
     }
 
-    public function hasRole(Role $role) {
+    /**
+     * checks if the user has a role, which is either
+     * passed by Role object or string.
+     *
+     * @param $role
+     * @return bool
+     */
+    public function hasRole($role) {
+        if ($role instanceof Role) {
+            $roleName = $role->getName();
+        } else {
+            $roleName = $role;
+        }
+
         /** @var Role $userRole */
         foreach ($this->roles as $userRole) {
-            if($role->getName() == $userRole->getName()) {
+            if($roleName == $userRole) {
                 return true;
             }
         };
