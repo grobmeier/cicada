@@ -37,12 +37,9 @@ get('/\/login\/do$/', function() {
     $result = $action->execute();
 
     if ($result == Action::SUCCESS) {
-
-        // TODO after storing user in session
-        //$echo = new EchoResponse();
-        // $echo->addHeader("Location: /admin/dashboard");
-        return new EchoResponse("OK");
-
+        $echo = new EchoResponse();
+        $echo->addHeader("Location: /admin/dashboard");
+        return $echo;
     } else {
         return new PhpResponse('auth/login.php', array("username" => $username));
     }
