@@ -53,6 +53,12 @@ get('/\/login\/do$/', function() {
     ->allowField("username", array( new StringLengthValidator(20) ))
     ->allowField("password", array( new StringLengthValidator(20) ));
 
+get('/\/phptemplate\/decorator$/', function() {
+    $response = new PhpResponse('helloworld.php', array( 'name' => "myname", 'ups' => 'huhu'));
+    $response->setDecorator('base.php');
+    return $response;
+});
+
 get('/\/phptemplate\/(?<name>.*)$/', function($name) {
     return new PhpResponse('helloworld.php', array( 'name' => $name, 'ups' => 'huhu'));
 });
