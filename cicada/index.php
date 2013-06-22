@@ -1,4 +1,5 @@
 <?php
+use Cicada\Configuration;
 use Cicada\Responses\Response;
 use Cicada\Routing\Router;
 
@@ -17,7 +18,9 @@ Logger::configure(include 'logging.php');
 $logger = Logger::getLogger("main");
 $logger->info("Starting Cicada");
 
-foreach ($config['routes'] as $routeFile) {
+$config = Configuration::getInstance();
+
+foreach ($config->get('routes') as $routeFile) {
     include_once($routeFile);
 }
 

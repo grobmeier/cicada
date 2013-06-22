@@ -1,6 +1,7 @@
 <?php
 
 use Cicada\Auth\UserProvider;
+use Cicada\Configuration;
 use Cicada\Responses\EchoResponse;
 use Cicada\Routing\Protector;
 use Cicada\Routing\Route;
@@ -18,6 +19,11 @@ function forward($path) {
         $echo->addHeader("Location: " . $path);
         return $echo;
     };
+}
+
+function config($key) {
+    $config = Configuration::getInstance();
+    return $config->get($key);
 }
 
 function get($pattern, $action) {

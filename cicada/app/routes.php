@@ -2,11 +2,12 @@
 
 use Cicada\Action;
 use Cicada\Auth\LoginAction;
+use Cicada\Configuration;
 use Cicada\Responses\EchoResponse;
 use Cicada\Responses\PhpResponse;
 use Cicada\Validators\StringLengthValidator;
 
-protect('/\/admin\/.*$/', $config['userProvider'])
+protect('/\/admin\/.*$/', config('userProvider'))
     ->allowRoles(array("admin"))
     ->allowUsers(array("anne"))
     ->setOnFail(forward('/login'));
@@ -20,7 +21,6 @@ get('/\/hello\/(?<name>.*)\/(?<blub>.*)$/', function($name, $blub) {
 });
 
 get('/\/hello\/(?<name>.*)$/', function($name) {
-    echo $_GET['ups'];
     return new EchoResponse("Hello Parameter: " .$name);
 });
 
@@ -29,13 +29,11 @@ get('/\/login$/', function() {
 });
 
 get('/\/login\/do$/', function() {
-    global $config;
-
     $username = readPost('username');
     $password = readPost('password');
 
     $action = new LoginAction($username, $password);
-    $action->setUserProvider($config['userProvider']);
+    $action->setUserProvider(config('userProvider'));
     $result = $action->execute();
 
     if ($result == Action::SUCCESS) {

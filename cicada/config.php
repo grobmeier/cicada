@@ -1,7 +1,10 @@
 <?php
 // Cicada Configuration
 use Cicada\Auth\FileUserProvider;
+use Cicada\Configuration;
 
-$config['routes'][] = 'app/routes.php';
+$configuration = Configuration::getInstance();
 
-$config['userProvider'] = new FileUserProvider('app/roles.php', 'app/users.php');
+$configuration->add('routes', array('app/routes.php'));
+$configuration->add('userProvider', new FileUserProvider('app/roles.php', 'app/users.php'));
+
