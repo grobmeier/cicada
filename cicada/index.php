@@ -9,11 +9,10 @@ spl_autoload_register();
 require 'vendor/autoload.php';
 
 include_once 'config.php';
-include_once 'logging.php';
 
 include_once 'lib/Cicada/Functions.php';
 
-Logger::configure($loggingConfiguration);
+Logger::configure(include 'logging.php');
 
 $logger = Logger::getLogger("main");
 $logger->info("Starting Cicada");

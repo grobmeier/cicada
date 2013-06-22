@@ -1,5 +1,5 @@
 <?php
-$loggingConfiguration =
+return
     array(
         'rootLogger' => array(
             'appenders' => array('default'),
