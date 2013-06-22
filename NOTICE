@@ -1,0 +1,13 @@
+Cicada PHP Framework
+Copyright 2013 Christian Grobmeier
+
+This product includes software developed by
+Christian Grobmeier(http://www.grobmeier.de/).
+
+Dependencies to third parties are defined in
+composer.json.
+
+Development environment is defined by the Vagrant-
+file. This file and all files related to it,
+like in: /manifest and /modules were generated
+by puPHPet (http://puphpet.com).
