@@ -19,11 +19,18 @@ namespace Cicada\Responses;
 class JsonResponse extends AbstractResponse {
     private $data;
 
-    function __construct($data) {
+    private $prefix;
+    private $suffix;
+
+    function __construct($data, $prefix = ")]}',", $suffix = "") {
         $this->data = $data;
+
+        $this->prefix = $prefix;
+        $this->suffix = $suffix;
+        $this->addHeader('Content-type: application/json');
     }
 
     public function serialize() {
-        return json_encode($this->data);
+        return $this->prefix.PHP_EOL.json_encode($this->data).PHP_EOL.$this->suffix;
     }
 }
