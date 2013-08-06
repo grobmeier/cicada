@@ -25,7 +25,9 @@ package { ['build-essential', 'vim', 'curl']:
   require => Exec['apt-get update'],
 }
 
-class { 'apache': }
+class { 'apache': 
+  require       => Exec['apt-get update'],
+}
 
 apache::dotconf { 'custom':
   content => 'EnableSendfile Off',
