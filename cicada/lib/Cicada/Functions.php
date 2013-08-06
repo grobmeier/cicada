@@ -20,6 +20,7 @@ use Cicada\Responses\EchoResponse;
 use Cicada\Routing\Protector;
 use Cicada\Routing\Route;
 use Cicada\Routing\Router;
+use Cicada\Validators\StringLengthValidator;
 
 function protect($pattern, UserProvider $userProvider) {
     $protector = new Protector($pattern, $userProvider);
@@ -42,15 +43,21 @@ function config($key) {
 
 function get($pattern, $action) {
     $route = new Route($pattern, $action);
+    $route->allowGetField('url', array(new StringLengthValidator(100)));
     Router::getInstance()->addRoute($route);
     return $route;
 }
 
 function readPost($key, $default = "") {
     if (isset ($_POST[$key])) {
-        $value = $_POST[$key];
-    } else {
-        $value = $default;
+        return $_POST[$key];
     }
-    return $value;
+    return $default;
+}
+
+function readGet($key, $default = "") {
+    if (isset ($_GET[$key])) {
+        return $_GET[$key];
+    }
+    return $default;
 }

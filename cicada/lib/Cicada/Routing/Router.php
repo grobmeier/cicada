@@ -55,6 +55,7 @@ class Router {
         /** @var $route Route */
         foreach ($this->routeMap as $route) {
             if ($route->matches($url)) {
+                $route->validateGet();
                 $route->validatePost();
 
                 return function() use ($route) {

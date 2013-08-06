@@ -39,6 +39,20 @@ get('/\/hello\/(?<name>.*)$/', function($name) {
     return new EchoResponse("Hello Parameter: " .$name);
 });
 
+// Allowed GET param test1, test2, test3
+get('/\/paramtest$/', function() {
+    $request = '';
+    $keys = array_keys($_GET);
+    foreach ($keys as $key) {
+        $request .= $key." -> #". $_GET[$key]."#<br/>".PHP_EOL;
+    }
+    return new EchoResponse("<h1>Get Parameter</h1>" .PHP_EOL.$request);
+
+})
+    ->allowGetField("test1",  array( new StringLengthValidator(3) ))
+    ->allowGetField("test2",  array( new StringLengthValidator(3) ))
+    ->allowGetField("test3",  array( new StringLengthValidator(3) ));
+
 get('/\/logout$/', function() {
     (new LogoutAction())->execute();
     return new PhpResponse('auth/login.php');
@@ -64,8 +78,8 @@ get('/\/login\/do$/', function() {
         return new PhpResponse('auth/login.php', array("username" => $username));
     }
 })
-    ->allowField("username", array( new StringLengthValidator(20) ))
-    ->allowField("password", array( new StringLengthValidator(20) ));
+    ->allowPostField("username", array( new StringLengthValidator(20) ))
+    ->allowPostField("password", array( new StringLengthValidator(20) ));
 
 get('/\/phptemplate\/decorator$/', function() {
     $response = new PhpResponse('helloworld.php', array( 'name' => "myname", 'ups' => 'huhu'));

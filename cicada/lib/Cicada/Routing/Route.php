@@ -24,6 +24,7 @@ class Route {
     private $matches;
 
     private $allowedPostFields = array();
+    private $allowedGetFields = array();
 
     use Url;
 
@@ -32,19 +33,19 @@ class Route {
         $this->route = $route;
     }
 
-    public function validatePost() {
-        $keys = array_keys($_POST);
+    private function validate($in, $allowedFields) {
+        $keys = array_keys($in);
 
         foreach ($keys as $key) {
             $found = false;
-            foreach ($this->allowedPostFields as $allowed) {
+            foreach ($allowedFields as $allowed) {
                 if ($allowed->fieldName == $key) {
                     $found = true;
 
                     if (isset($allowed->validators)) {
                         /** @var $validator Validator */
                         foreach ($allowed->validators as $validator) {
-                            $validator->validate($_POST[$key], $key);
+                            $validator->validate($in[$key], $key);
                         }
                     }
 
@@ -57,12 +58,28 @@ class Route {
         }
     }
 
+    public function validateGet() {
+        $this->validate($_GET, $this->allowedGetFields);
+    }
 
-    public function allowField($fieldName, $validators = null) {
+    public function validatePost() {
+        $this->validate($_POST, $this->allowedPostFields);
+    }
+
+    private function wrapField($fieldName, $validators = null) {
         $allowed = new \stdClass();
         $allowed->fieldName = $fieldName;
         $allowed->validators = $validators;
-        array_push($this->allowedPostFields, $allowed);
+        return $allowed;
+    }
+
+    public function allowGetField($fieldName, $validators = null) {
+        array_push($this->allowedGetFields, $this->wrapField($fieldName, $validators));
+        return $this;
+    }
+
+    public function allowPostField($fieldName, $validators = null) {
+        array_push($this->allowedPostFields, $this->wrapField($fieldName, $validators));
         return $this;
     }
 
