@@ -31,6 +31,17 @@ class JsonResponse extends AbstractResponse {
     }
 
     public function serialize() {
-        return $this->prefix.PHP_EOL.json_encode($this->data).PHP_EOL.$this->suffix;
+        $prefix = "";
+        $suffix = "";
+
+        if ($this->prefix != null && $this->prefix != "") {
+           $prefix = $this->prefix.PHP_EOL;
+        }
+
+        if ($this->suffix != null && $this->suffix != "") {
+            $suffix = $this->suffix.PHP_EOL;
+        }
+
+        return $prefix.json_encode($this->data).$suffix;
     }
 }
