@@ -19,7 +19,7 @@ namespace Cicada\Templates\Php;
 use Cicada\Templates\Template;
 
 class PhpTemplate implements Template {
-
+    private $base = "./templates/";
     private $templateFile;
     private $decorator;
 
@@ -31,6 +31,10 @@ class PhpTemplate implements Template {
      */
     public function setTemplateFile($templateFile) {
         $this->templateFile = $templateFile;
+    }
+
+    public function setBase($base) {
+        $this->base = $base;
     }
 
     /**
@@ -52,7 +56,7 @@ class PhpTemplate implements Template {
 
     public function serialize() {
         ob_start();
-        include('./templates/'.$this->templateFile);
+        include($this->base.$this->templateFile);
 
         $content = ob_get_clean();
 
@@ -61,7 +65,7 @@ class PhpTemplate implements Template {
         }
 
         ob_start();
-        include('./templates/'.$this->decorator);
+        include($this->base.$this->decorator);
         return ob_get_clean();
     }
 }

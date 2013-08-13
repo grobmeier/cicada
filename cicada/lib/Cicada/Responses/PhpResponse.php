@@ -22,6 +22,7 @@ class PhpResponse extends AbstractResponse {
     private $templateFile;
     private $decorator;
     private $values;
+    private $base;
 
     function __construct($templateFile, $values = array()) {
         $this->templateFile = $templateFile;
@@ -35,10 +36,19 @@ class PhpResponse extends AbstractResponse {
         $this->decorator = $decorator;
     }
 
+    public function setBase($base) {
+        $this->base = $base;
+    }
+
     public function serialize() {
         $template = new PhpTemplate();
         $template->setTemplateFile($this->templateFile);
         $template->setDecorator($this->decorator);
+
+        if ($this->base !== null) {
+            $template->setBase($this->base);
+        }
+
         $template->assignValues($this->values);
         return $template->serialize();
     }
