@@ -22,8 +22,8 @@ use Cicada\Auth\UserProvider;
 class Protector {
     private $route;
     private $userProvider;
-    private $users;
-    private $roles;
+    private $users = array();
+    private $roles = array();
 
     private $onFail;
 
