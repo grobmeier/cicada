@@ -41,16 +41,18 @@ foreach ($config->get('routes') as $routeFile) {
 }
 
 try {
-    $response = Router::getInstance()->route($_GET['url']);
-    /** @var Response $executed */
-    $executed = $response();
-    $headers = $executed->headers();
+    $route = Router::getInstance()->route($_GET['url']);
+
+    /** @var Response $response */
+    $response = $route();
+
+    $headers = $response->headers();
     if ($headers != null) {
         foreach ($headers as $header) {
              header($header);
         }
     }
-    echo $executed->serialize();
+    echo $response->serialize();
 } catch (UnexpectedValueException $e) {
     echo $e->getMessage();
 } catch (Exception $e) {
