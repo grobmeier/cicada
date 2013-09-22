@@ -16,13 +16,17 @@
  */
 namespace Cicada;
 
-abstract class Action implements ActionExecutor {
-    public abstract function execute();
+use Cicada\Responses\Response;
+
+interface ActionExecutor {
+    const SUCCESS = "success";
+    const ERROR = "error";
+    const LOGIN = "login";
+
+    public function execute();
 
     /**
-     * Not required to deliver a response
+     * @return Response|null
      */
-    public function getResponse() {
-        return null;
-    }
-}
+    public function getResponse();
+} 

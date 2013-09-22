@@ -16,10 +16,12 @@
  */
 namespace Cicada\Routing;
 
+use Cicada\ActionExecutor;
 use Cicada\Auth\LoginAction;
 use Cicada\Responses\EchoResponse;
 use Cicada\Session;
 use Exception;
+use ReflectionClass;
 use ReflectionFunction;
 
 class Router {
@@ -58,19 +60,11 @@ class Router {
                 $route->validateGet();
                 $route->validatePost();
 
-                return function() use ($route) {
-                    $action = $route->getAction();
+                if (is_string($route->getAction())) {
+                    return $this->handleActionExecutorName($route);
+                }
 
-                    $matches = $route->getMatches();
-                    foreach ($matches as $key => $value) {
-                        if (is_int($key)) {
-                            unset($matches[$key]);
-                        }
-                    }
-
-                    $function = new ReflectionFunction($action);
-                    return $function->invokeArgs($matches);
-                };
+                return $this->handleClosure($route);
             }
         }
         throw new Exception("No match for route");
@@ -110,5 +104,45 @@ class Router {
             self::$instance = new Router();
         }
         return self::$instance;
+    }
+
+    /**
+     * @param $route
+     * @return callable
+     */
+    private function handleActionExecutorName($route) {
+        return function () use ($route) {
+            $clazz = new ReflectionClass($route->getAction());
+            $obj = $clazz->newInstance();
+            $execMethod = $clazz->getMethod('execute');
+            $result = $execMethod->invoke($obj);
+
+            if (ActionExecutor::SUCCESS == $result) {
+                $resMethod = $clazz->getMethod('getResponse');
+                return $resMethod->invoke($obj);
+            } else {
+                return new EchoResponse("An error occured.");
+            }
+        };
+    }
+
+    /**
+     * @param $route
+     * @return callable
+     */
+    private function handleClosure($route) {
+        return function () use ($route) {
+            $action = $route->getAction();
+
+            $matches = $route->getMatches();
+            foreach ($matches as $key => $value) {
+                if (is_int($key)) {
+                    unset($matches[$key]);
+                }
+            }
+
+            $function = new ReflectionFunction($action);
+            return $function->invokeArgs($matches);
+        };
     }
 }

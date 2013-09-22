@@ -14,15 +14,29 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-namespace Cicada;
+namespace Cicada\Examples;
 
-abstract class Action implements ActionExecutor {
-    public abstract function execute();
+
+use Cicada\Action;
+use Cicada\Responses\EchoResponse;
+
+class LazyAction extends Action {
+
+    private $hello;
 
     /**
-     * Not required to deliver a response
+     * Lazy actions are created by reflection and thus need an constructor
+     * which can be called without params
      */
+    function __construct() {
+    }
+
+    public function execute() {
+        $this->hello = readGet("hello", "No Hello?");
+        return self::SUCCESS;
+    }
+
     public function getResponse() {
-        return null;
+        return new EchoResponse('Response: ' . $this->hello);
     }
 }
