@@ -14,37 +14,34 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-namespace Cicada;
+namespace Cicada\Examples;
 
-abstract class Action implements ActionExecutor {
-    public abstract function execute();
 
-    public function readAllData() {
-        $resource = fopen("php://input", "r");
+use Cicada\Action;
+use Cicada\Responses\EchoResponse;
 
+class PutTextClosureAction extends Action {
+
+    private $putData;
+
+    /**
+     * Lazy actions are created by reflection and thus need an constructor
+     * which can be called without params
+     */
+    function __construct() {
+    }
+
+    public function execute() {
         $result = '';
-        while ($data = fread($resource, 1024)) {
+        $this->putData = $this->bufferedRead(function($data) use (&$result) {
             $result .= $data;
-        }
+        });
 
-        return $result;
+        $this->putData = $result;
+        return self::SUCCESS;
     }
 
-    /**
-     * @param callable $function
-     * @param int $bufferSize
-     */
-    public function bufferedRead($function, $bufferSize = 1024) {
-        $resource = fopen("php://input", "r");
-        while ($data = fread($resource, $bufferSize)) {
-            $function($data);
-        }
-    }
-
-    /**
-     * Not required to deliver a response
-     */
     public function getResponse() {
-        return null;
+        return new EchoResponse('Read put data: ' . $this->putData);
     }
 }

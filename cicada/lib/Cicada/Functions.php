@@ -55,6 +55,20 @@ function post($pattern, $action) {
     return $route;
 }
 
+function put($pattern, $action) {
+    $route = new Route($pattern, $action, 'PUT');
+    $route->allowGetField('url', array(new StringLengthValidator(100)));
+    Router::getInstance()->addRoute($route);
+    return $route;
+}
+
+function delete($pattern, $action) {
+    $route = new Route($pattern, $action, 'DELETE');
+    $route->allowGetField('url', array(new StringLengthValidator(100)));
+    Router::getInstance()->addRoute($route);
+    return $route;
+}
+
 function readPost($key, $default = "") {
     if (isset ($_POST[$key])) {
         return $_POST[$key];
