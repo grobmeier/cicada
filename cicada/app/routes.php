@@ -27,8 +27,12 @@ protect('/\/admin\/.*$/', config('userProvider'))
     ->allowUsers(array("anna"))
     ->setOnFail(forward('/login'));
 
-get('/\/lazy/', 'Cicada\Examples\LazyAction')
+get('/\/lazy\/(?<name>.*)$/', 'Cicada\Examples\LazyAction');
+
+get('/\/lazy$/', 'Cicada\Examples\LazyAction')
     ->allowGetField('hello', array( new StringLengthValidator(20) ));
+
+
 
 get('/\/hello\/world$/', function() {
     return new EchoResponse("Hello World");

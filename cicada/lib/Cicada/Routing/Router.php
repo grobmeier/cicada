@@ -115,13 +115,17 @@ class Router {
             $clazz = new ReflectionClass($route->getAction());
             $obj = $clazz->newInstance();
             $execMethod = $clazz->getMethod('execute');
-            $result = $execMethod->invoke($obj);
+
+            $matches = $route->getMatches();
+            $this->cleanMatches($matches);
+
+            $result = $execMethod->invokeArgs($obj, $matches);
 
             if (ActionExecutor::SUCCESS == $result) {
                 $resMethod = $clazz->getMethod('getResponse');
                 return $resMethod->invoke($obj);
             } else {
-                return new EchoResponse("An error occured.");
+                return new EchoResponse("An error occurred.");
             }
         };
     }
@@ -135,14 +139,21 @@ class Router {
             $action = $route->getAction();
 
             $matches = $route->getMatches();
-            foreach ($matches as $key => $value) {
-                if (is_int($key)) {
-                    unset($matches[$key]);
-                }
-            }
+            $this->cleanMatches($matches);
 
             $function = new ReflectionFunction($action);
             return $function->invokeArgs($matches);
         };
+    }
+
+    /**
+     * @param $matches
+     */
+    private function cleanMatches(&$matches) {
+        foreach ($matches as $key => $value) {
+            if (is_int($key)) {
+                unset($matches[$key]);
+            }
+        }
     }
 }

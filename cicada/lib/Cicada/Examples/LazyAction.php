@@ -31,8 +31,12 @@ class LazyAction extends Action {
     function __construct() {
     }
 
-    public function execute() {
-        $this->hello = readGet("hello", "No Hello?");
+    public function execute($hello = "") {
+        if ($hello == "") {
+            $this->hello = readGet("hello", "No Hello?");
+        } else {
+            $this->hello = $hello;
+        }
         return self::SUCCESS;
     }
 
