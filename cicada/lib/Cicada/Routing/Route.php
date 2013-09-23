@@ -25,12 +25,14 @@ class Route {
 
     private $allowedPostFields = array();
     private $allowedGetFields = array();
+    private $allowedMethod = 'GET';
 
     use Url;
 
-    function __construct($route, $action) {
+    function __construct($route, $action, $allowedMethod = 'GET') {
         $this->action = $action;
         $this->route = $route;
+        $this->allowedMethod = $allowedMethod;
     }
 
     private function validate($in, $allowedFields) {
@@ -55,6 +57,12 @@ class Route {
             if (!$found) {
                 throw new \UnexpectedValueException("Field $key not allowed.");
             }
+        }
+    }
+
+    public function validateMethod() {
+        if ($_SERVER['REQUEST_METHOD'] !== $this->allowedMethod) {
+            throw new \UnexpectedValueException('Method: '.$_SERVER['REQUEST_METHOD'].' not allowed for this request.');
         }
     }
 

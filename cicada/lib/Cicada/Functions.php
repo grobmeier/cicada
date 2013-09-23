@@ -48,6 +48,13 @@ function get($pattern, $action) {
     return $route;
 }
 
+function post($pattern, $action) {
+    $route = new Route($pattern, $action, 'POST');
+    $route->allowGetField('url', array(new StringLengthValidator(100)));
+    Router::getInstance()->addRoute($route);
+    return $route;
+}
+
 function readPost($key, $default = "") {
     if (isset ($_POST[$key])) {
         return $_POST[$key];

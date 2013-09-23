@@ -69,7 +69,7 @@ get('/\/login$/', function() {
     return new PhpResponse('auth/login.php');
 });
 
-get('/\/login\/do$/', function() {
+post('/\/login\/do$/', function() {
     $username = readPost('username');
     $password = readPost('password');
 
