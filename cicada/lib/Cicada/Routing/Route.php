@@ -109,4 +109,8 @@ class Route {
     public function setMatches($matches) {
         $this->matches = $matches;
     }
+
+    public function getAllowedMethod() {
+        return $this->allowedMethod;
+    }
 }

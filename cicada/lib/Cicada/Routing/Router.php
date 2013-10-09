@@ -33,14 +33,19 @@ class Router {
     }
 
     public function addRoute(Route $route) {
-        array_push($this->routeMap, $route);
+        $method = $route->getAllowedMethod();
+        if (!isset($this->routeMap[$method])) {
+            $this->routeMap[$method] = [];
+        }
+
+        $this->routeMap[$method][] = $route;
     }
 
     public function addProtector(Protector $protector) {
         array_push($this->protectors, $protector);
     }
 
-    public function route($url) {
+    public function route($url, $method = 'GET') {
 
         /** @var $protector Protector */
         foreach ($this->protectors as $protector) {
@@ -54,18 +59,20 @@ class Router {
             }
         }
 
-        /** @var $route Route */
-        foreach ($this->routeMap as $route) {
-            if ($route->matches($url)) {
-                $route->validateMethod();
-                $route->validateGet();
-                $route->validatePost();
+        if (isset($this->routeMap[$method])) {
+            /** @var $route Route */
+            foreach ($this->routeMap[$method] as $route) {
+                if ($route->matches($url)) {
+                    $route->validateMethod();
+                    $route->validateGet();
+                    $route->validatePost();
 
-                if (is_string($route->getAction())) {
-                    return $this->handleActionExecutorName($route);
+                    if (is_string($route->getAction())) {
+                        return $this->handleActionExecutorName($route);
+                    }
+
+                    return $this->handleClosure($route);
                 }
-
-                return $this->handleClosure($route);
             }
         }
         throw new Exception("No match for route");
