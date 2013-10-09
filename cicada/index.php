@@ -41,7 +41,7 @@ foreach ($config->get('routes') as $routeFile) {
 }
 
 try {
-    $route = Router::getInstance()->route($_GET['url']);
+    $route = Router::getInstance()->route($_GET['url'], $_SERVER['REQUEST_METHOD']);
 
     /** @var Response $response */
     $response = $route();
