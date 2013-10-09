@@ -32,6 +32,9 @@ get('/\/lazy\/(?<name>.*)$/', 'Cicada\Examples\LazyAction');
 get('/\/lazy$/', 'Cicada\Examples\LazyAction')
     ->allowGetField('hello', array( new StringLengthValidator(20) ));
 
+get('/\/puttext$/', function() {
+    return new EchoResponse("Hello World");
+});
 put('/\/puttext$/', 'Cicada\Examples\PutTextAction');
 put('/\/puttextclosure$/', 'Cicada\Examples\PutTextClosureAction');
 
