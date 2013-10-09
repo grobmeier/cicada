@@ -75,7 +75,7 @@ class Router {
                 }
             }
         }
-        throw new Exception("No match for route");
+        throw new NoRouteException("No match for route");
     }
 
     /**

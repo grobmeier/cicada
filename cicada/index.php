@@ -17,6 +17,7 @@
 
 use Cicada\Configuration;
 use Cicada\Responses\Response;
+use Cicada\Routing\NoRouteException;
 use Cicada\Routing\Router;
 
 define('CLASS_DIR', 'lib/');
@@ -54,6 +55,8 @@ try {
     }
     echo $response->serialize();
 } catch (UnexpectedValueException $e) {
+    echo $e->getMessage();
+} catch (NoRouteException $e) {
     echo $e->getMessage();
 } catch (Exception $e) {
     echo $e->getTraceAsString();
