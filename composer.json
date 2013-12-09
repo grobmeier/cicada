@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Tiny PHP framework for quickly creating webapps, inspired by Rubys Sinatra",
     "keywords": ["framework"],
-    "homepage": "https://bitbucket.org/grobmeier/cicada",
+    "homepage": "https://github.com/grobmeier/cicada",
     "license": "Apache-2.0",
     "authors": [
         {
@@ -14,8 +14,8 @@
         }
     ],
     "support": {
-        "issues": "https://bitbucket.org/grobmeier/cicada/issues",
-        "source": "https://bitbucket.org/grobmeier/cicada/src"
+        "issues": "https://github.com/grobmeier/cicada/issues",
+        "source": "https://github.com/grobmeier/cicada"
     },
     "require": {
         "php": ">=5.4.0",
