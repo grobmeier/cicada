@@ -82,3 +82,7 @@ function readGet($key, $default = "") {
     }
     return $default;
 }
+
+function phpResponse($template) {
+    return new \Cicada\Responses\PhpResponse($template);
+}

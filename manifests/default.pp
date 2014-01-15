@@ -38,7 +38,7 @@ apache::module { 'rewrite': }
 apache::vhost { 'cicada.local':
   server_name   => 'cicada.local',
   serveraliases => ['www.cicada.local'],
-  docroot       => '/var/www/cicada',
+  docroot       => '/var/www/cicada/web',
   port          => '80',
   env_variables => [],
   priority      => '1',

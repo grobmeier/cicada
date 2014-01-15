@@ -29,15 +29,35 @@ class PhpResponse extends AbstractResponse {
         $this->values = $values;
     }
 
-    /**
-     * @param mixed $decorator
-     */
-    public function setDecorator($decorator) {
-        $this->decorator = $decorator;
+    public function base($base) {
+        $this->base = $base;
+        return $this;
     }
 
+    public function decorate($decorator) {
+        $this->decorator = $decorator;
+        return $this;
+    }
+
+    public function values($values) {
+        $this->values = $values;
+        return $this;
+    }
+
+    /**
+     * @param mixed $decorator
+     * @deprecated use self::decorate($decorator) instead
+     */
+    public function setDecorator($decorator) {
+        $this->decorate($decorator);
+    }
+
+    /**
+     * @param $base
+     * @deprecated use self::values($values) instead
+     */
     public function setBase($base) {
-        $this->base = $base;
+        $this->base($base);
     }
 
     public function serialize() {
