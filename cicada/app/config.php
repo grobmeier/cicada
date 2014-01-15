@@ -21,4 +21,5 @@ $configuration = Configuration::getInstance();
 
 $configuration->add('routes', array(APP_DIR.'routes.php'));
 $configuration->add('userProvider', new FileUserProvider(APP_DIR.'roles.php', APP_DIR.'users.php'));
+$configuration->add('cicada.templates.base', '../templates/');
 
