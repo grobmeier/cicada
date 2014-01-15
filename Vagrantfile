@@ -11,7 +11,7 @@ Vagrant.configure("2") do |config|
   end
 
   
-  config.vm.synced_folder "./", "/var/www", id: "vagrant-root", :extra => "dmode=777,fmode=666"
+  config.vm.synced_folder "./", "/var/www", id: "vagrant-root", :mount_options => ["dmode=777","fmode=666"]
 
   config.vm.provision :shell, :inline => 'echo -e "mysql_root_password=root
 controluser_password=awesome" > /etc/phpmyadmin.facts;'
