@@ -24,6 +24,7 @@
     "autoload": {
         "psr-0": {
             "Cicada": "cicada/lib"
-        }
+        },
+        "files": ["cicada/lib/Cicada/Functions.php"]
     }
 }

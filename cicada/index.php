@@ -28,8 +28,6 @@ require 'vendor/autoload.php';
 
 include_once 'config.php';
 
-include_once 'lib/Cicada/Functions.php';
-
 Logger::configure(include 'logging.php');
 
 $logger = Logger::getLogger("main");
