@@ -17,7 +17,6 @@
 use Cicada\Action;
 use Cicada\Auth\LoginAction;
 use Cicada\Auth\LogoutAction;
-use Cicada\Configuration;
 use Cicada\Responses\EchoResponse;
 use Cicada\Responses\PhpResponse;
 use Cicada\Validators\StringLengthValidator;

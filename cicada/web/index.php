@@ -1,6 +1,5 @@
 <?php
-/*
- *  Copyright 2013 Christian Grobmeier
+/*  Copyright 2013-2014 Christian Grobmeier
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,15 +19,17 @@ use Cicada\Responses\Response;
 use Cicada\Routing\NoRouteException;
 use Cicada\Routing\Router;
 
-define('CLASS_DIR', 'lib/');
+define('CLASS_DIR', '../lib/');
+define('APP_DIR', '../app/');
+
 set_include_path(get_include_path().PATH_SEPARATOR.CLASS_DIR);
 spl_autoload_register();
 
-require 'vendor/autoload.php';
+require '../vendor/autoload.php';
 
-include_once 'config.php';
+include_once APP_DIR.'config.php';
 
-Logger::configure(include 'logging.php');
+Logger::configure(include APP_DIR.'logging.php');
 
 $logger = Logger::getLogger("main");
 $logger->info("Starting Cicada");
