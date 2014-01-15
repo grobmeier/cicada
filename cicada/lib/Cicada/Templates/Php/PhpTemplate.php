@@ -16,15 +16,25 @@
  */
 namespace Cicada\Templates\Php;
 
+use Cicada\Configuration;
 use Cicada\Templates\Template;
 
 class PhpTemplate implements Template {
-    private $base = "./templates/";
+    private $base = "../templates/";
     private $templateFile;
     private $decorator;
 
     private $values;
     private $originalValues;
+
+    function __construct() {
+        /** @var Configuration $configuration */
+        $configuration = Configuration::getInstance();
+        $base = $configuration->get('cicada.templates.base');
+        if ($base != null) {
+            $this->base = $base;
+        }
+    }
 
     /**
      * @param $templateFile String path to file
@@ -50,8 +60,14 @@ class PhpTemplate implements Template {
         $this->values = (object)$values;
     }
 
+    /**
+     * Function to be called within a template.
+     * Can include other files, like header.
+     *
+     * @param $path
+     */
     public function load($path) {
-        include('./templates/'.$path);
+        include($this->base.$path);
     }
 
     public function serialize() {

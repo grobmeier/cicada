@@ -92,9 +92,7 @@ post('/\/login\/do$/', function() {
     ->allowPostField("password", array( new StringLengthValidator(20) ));
 
 get('/\/phptemplate\/decorator$/', function() {
-    $response = new PhpResponse('helloworld.php', array( 'name' => "myname", 'ups' => 'huhu'));
-    $response->setDecorator('base.php');
-    return $response;
+    return phpResponse('helloworld.php')->decorate('base.php')->values(['name' => "myname", 'ups' => 'huhu']);
 });
 
 get('/\/phptemplate\/(?<name>.*)$/', function($name) {

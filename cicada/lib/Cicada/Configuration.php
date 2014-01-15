@@ -29,7 +29,10 @@ class Configuration {
     }
 
     public function get($key) {
-        return $this->map[$key];
+        if (isset($this->map[$key])) {
+            return $this->map[$key];
+        }
+        return null;
     }
 
     public static function getInstance() {
