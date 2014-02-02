@@ -22,9 +22,9 @@
         "apache/log4php": "2.3.0"
     },
     "autoload": {
-        "psr-0": {
-            "Cicada": "cicada/lib"
+        "psr-4": {
+            "Cicada\\": "lib"
         },
-        "files": ["cicada/lib/Cicada/Functions.php"]
+        "files": ["lib/Functions.php"]
     }
 }
