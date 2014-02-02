@@ -24,6 +24,9 @@ use Exception;
 use ReflectionClass;
 use ReflectionFunction;
 
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 class Router {
     private $routeMap = array();
     private $protectors = array();
@@ -45,37 +48,35 @@ class Router {
         array_push($this->protectors, $protector);
     }
 
-    public function route($url, $method = 'GET') {
+    /**
+     * Routes the request, and returns a Response.
+     * @param  Request $request
+     * @return Response
+     */
+    public function route(Request $request) {
 
-        /** @var $protector Protector */
-        foreach ($this->protectors as $protector) {
-
-            if ($protector->matches($url)) {
-                $resultFunction = $this->protect($protector);
-
-                if ($resultFunction != null) {
-                    return $resultFunction;
-                }
-            }
-        }
+        $url = $request->getPathInfo();
+        $method = $request->getMethod();
 
         if (isset($this->routeMap[$method])) {
             /** @var $route Route */
             foreach ($this->routeMap[$method] as $route) {
-                if ($route->matches($url)) {
-                    $route->validateMethod();
-                    $route->validateGet();
-                    $route->validatePost();
 
-                    if (is_string($route->getAction())) {
-                        return $this->handleActionExecutorName($route);
-                    }
+                $pattern = $route->getRoute();
+                if (preg_match($pattern, $url, $matches)) {
+                    $route->validateMethod($request);
+                    $route->validateGet($request);
+                    $route->validatePost($request);
 
-                    return $this->handleClosure($route);
+                    return $this->handle($route, $request, $matches);
                 }
             }
         }
-        throw new NoRouteException("No match for route");
+
+        // Return HTTP 404
+        return function() {
+            return new Response("Route not found", Response::HTTP_NOT_FOUND);
+        };
     }
 
     /**
@@ -99,13 +100,10 @@ class Router {
             return $onFail;
         } else {
             return function() {
-                $echo = new EchoResponse("Unauthorized");
-                $echo->addHeader("HTTP/1.1 401 Unauthorized");
-                return $echo;
+                return new Response("Not Authorized", Response::NOT_AUTHORIZED);
             };
         }
     }
-
 
     public static function getInstance() {
         if (self::$instance == null) {
@@ -114,27 +112,24 @@ class Router {
         return self::$instance;
     }
 
-    /**
-     * @param $route
-     * @return callable
-     */
-    private function handleActionExecutorName($route) {
-        return function () use ($route) {
-            $clazz = new ReflectionClass($route->getAction());
-            $obj = $clazz->newInstance();
-            $execMethod = $clazz->getMethod('execute');
+    private function handle(Route $route, Request $request, array $matches) {
+        $action = $route->getAction();
 
-            $matches = $route->getMatches();
-            $this->cleanMatches($matches);
+        // Keep only named matches, and prepend the request
+        $this->cleanMatches($matches);
+        array_unshift($matches, $request);
 
-            $result = $execMethod->invokeArgs($obj, $matches);
+        if (is_string($action)) {
+            return $this->handleActionName($action, $matches);
+        }
 
-            if (ActionExecutor::SUCCESS == $result) {
-                $resMethod = $clazz->getMethod('getResponse');
-                return $resMethod->invoke($obj);
-            } else {
-                return new EchoResponse("An error occurred.");
-            }
+        if ($action instanceof \Closure) {
+            return $this->handleClosure($action, $matches);
+        }
+
+        // Return HTTP 500
+        return function() {
+            return new Response("Internal error", Response::HTTP_INTERNAL_SERVER_ERROR);
         };
     }
 
@@ -142,15 +137,39 @@ class Router {
      * @param $route
      * @return callable
      */
-    private function handleClosure($route) {
-        return function () use ($route) {
-            $action = $route->getAction();
+    private function handleActionName($action, $matches) {
 
-            $matches = $route->getMatches();
-            $this->cleanMatches($matches);
+        list($class, $method) = $this->parseActionName($action);
 
-            $function = new ReflectionFunction($action);
-            return $function->invokeArgs($matches);
+        return function () use ($class, $method, $matches) {
+            $object = new $class();
+            return call_user_func_array([$object, $method], $matches);
+        };
+    }
+
+    private function parseActionName($action) {
+        $bits = explode('::', $action);
+        $count = count($bits);
+
+        // If no function is specified, call execute() by default
+        if ($count == 1) {
+            $bits[] = 'execute';
+        }
+
+        if (count($bits) == 2) {
+            return $bits;
+        }
+
+        throw new \Exception("Invalid action name: \"$action\"");
+    }
+
+    /**
+     * @param $route
+     * @return callable
+     */
+    private function handleClosure(callable $action, array $matches) {
+        return function () use ($action, $matches) {
+            return call_user_func_array($action, $matches);
         };
     }
 

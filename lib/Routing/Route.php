@@ -18,6 +18,9 @@ namespace Cicada\Routing;
 
 use Cicada\Validators\Validator;
 
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 class Route {
     private $route;
     private $action;
@@ -31,8 +34,19 @@ class Route {
 
     function __construct($route, $action, $allowedMethod = 'GET') {
         $this->action = $action;
-        $this->route = $route;
+        $this->route = $this->parseRoute($route);
         $this->allowedMethod = $allowedMethod;
+    }
+
+    /**
+     * Preprocess the regex route pattern.
+     *
+     * Adds start and end regex delimter (/), and escapes any occurances of
+     * the delimiter within the pattern.
+     */
+    private function parseRoute($route) {
+        $route = str_replace('/', '\\/', $route);
+        return "/$route/";
     }
 
     private function validate($in, $allowedFields) {
@@ -60,18 +74,21 @@ class Route {
         }
     }
 
-    public function validateMethod() {
-        if ($_SERVER['REQUEST_METHOD'] !== $this->allowedMethod) {
-            throw new \UnexpectedValueException('Method: '.$_SERVER['REQUEST_METHOD'].' not allowed for this request.');
+    public function validateMethod(Request $request) {
+        $method = $request->getMethod();
+        if ($method !== $this->allowedMethod) {
+            throw new \UnexpectedValueException("Method: $method not allowed for this request.");
         }
     }
 
-    public function validateGet() {
-        $this->validate($_GET, $this->allowedGetFields);
+    public function validateGet(Request $request) {
+        $getFields = $request->query->all();
+        $this->validate($getFields, $this->allowedGetFields);
     }
 
-    public function validatePost() {
-        $this->validate($_POST, $this->allowedPostFields);
+    public function validatePost(Request $request) {
+        $postFields = $request->request->all();
+        $this->validate($postFields, $this->allowedPostFields);
     }
 
     private function wrapField($fieldName, $validators = null) {
