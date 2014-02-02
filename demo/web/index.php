@@ -15,44 +15,42 @@
  */
 
 use Cicada\Configuration;
-use Cicada\Responses\Response;
 use Cicada\Routing\NoRouteException;
 use Cicada\Routing\Router;
 
-define('CLASS_DIR', '../lib/');
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+// define('CLASS_DIR', '../lib/');
 define('APP_DIR', '../app/');
 
-set_include_path(get_include_path().PATH_SEPARATOR.CLASS_DIR);
-spl_autoload_register();
+// set_include_path(get_include_path().PATH_SEPARATOR.CLASS_DIR);
+// spl_autoload_register();
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-include_once APP_DIR.'config.php';
+require APP_DIR.'config.php';
 
+// Init logging
 Logger::configure(include APP_DIR.'logging.php');
-
 $logger = Logger::getLogger("main");
 $logger->info("Starting Cicada");
 
+// Include routes from configuration
 $config = Configuration::getInstance();
-
 foreach ($config->get('routes') as $routeFile) {
     include_once($routeFile);
 }
 
 try {
-    $route = Router::getInstance()->route($_GET['url'], $_SERVER['REQUEST_METHOD']);
+    $request = Request::createFromGlobals();
+    $route = Router::getInstance()->route($request);
 
     /** @var Response $response */
     $response = $route();
+    $response->prepare($request);
+    $response->send();
 
-    $headers = $response->headers();
-    if ($headers != null) {
-        foreach ($headers as $header) {
-             header($header);
-        }
-    }
-    echo $response->serialize();
 } catch (UnexpectedValueException $e) {
     echo $e->getMessage();
 } catch (NoRouteException $e) {
@@ -60,4 +58,3 @@ try {
 } catch (Exception $e) {
     echo $e->getTraceAsString();
 }
-
