@@ -17,14 +17,13 @@
 
 use Cicada\Configuration;
 use Cicada\Responses\EchoResponse;
-use Cicada\Routing\Protector;
+use Cicada\Routing\ProtectorInterface;
 use Cicada\Routing\Route;
 use Cicada\Routing\Router;
 use Cicada\Validators\StringLengthValidator;
 
-function protect($pattern, UserProvider $userProvider) {
-    $protector = new Protector($pattern, $userProvider);
-    Router::getInstance()->addProtector($protector);
+function protect($pattern, ProtectorInterface $protector) {
+    Router::getInstance()->addProtector($pattern, $protector);
     return $protector;
 }
 

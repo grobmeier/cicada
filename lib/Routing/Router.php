@@ -42,8 +42,9 @@ class Router {
         $this->routeMap[$method][] = $route;
     }
 
-    public function addProtector(Protector $protector) {
-        array_push($this->protectors, $protector);
+    public function addProtector($pattern, ProtectorInterface $protector) {
+        $pattern = '/' . str_replace('/', '\\/', $pattern) . '/';
+        array_push($this->protectors, [$pattern, $protector]);
     }
 
     /**
@@ -66,6 +67,17 @@ class Router {
                     $route->validateGet($request);
                     $route->validatePost($request);
 
+                    foreach($this->protectors as list($pattern, $protector)) {
+                        if (preg_match($pattern, $url)) {
+                            $response = $protector->protect($request);
+                            if ($response !== null) {
+                                return function() use ($response) {
+                                    return $response;
+                                };
+                            }
+                        }
+                    }
+
                     return $this->handle($route, $request, $matches);
                 }
             }
@@ -75,32 +87,6 @@ class Router {
         return function() {
             return new Response("Route not found", Response::HTTP_NOT_FOUND);
         };
-    }
-
-    /**
-     * Returns an action function, if the user is not allowed to proceed,
-     * or null, if the user is allowed to proceed.
-     *
-     * @param Protector $protector
-     * @return callable|mixed|null
-     */
-    public function protect(Protector $protector) {
-        $user = Session::getInstance()->get(LoginAction::CICADA_USER);
-
-        if ($user != null) {
-            if ($protector->isUserAllowed($user)) {
-                return null;
-            }
-        }
-
-        $onFail = $protector->getOnFail();
-        if($onFail != null) {
-            return $onFail;
-        } else {
-            return function() {
-                return new Response("Not Authorized", Response::NOT_AUTHORIZED);
-            };
-        }
     }
 
     public static function getInstance() {

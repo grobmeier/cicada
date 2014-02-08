@@ -30,8 +30,6 @@ class Route {
     private $allowedGetFields = array();
     private $allowedMethod = 'GET';
 
-    use Url;
-
     function __construct($route, $action, $allowedMethod = 'GET') {
         $this->action = $action;
         $this->route = $this->parseRoute($route);
@@ -108,23 +106,12 @@ class Route {
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getMatches() {
-        return $this->matches[0];
-    }
-
     public function getAction() {
         return $this->action;
     }
 
     public function getRoute() {
         return $this->route;
-    }
-
-    public function setMatches($matches) {
-        $this->matches = $matches;
     }
 
     public function getAllowedMethod() {

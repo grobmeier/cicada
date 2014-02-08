@@ -14,11 +14,7 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-use Cicada\Action;
-use Cicada\Auth\LoginAction;
-use Cicada\Auth\LogoutAction;
-use Cicada\Responses\PhpResponse;
-use Cicada\Validators\StringLengthValidator;
+use Cicada\Routing\ProtectorInterface;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,87 +44,25 @@ class SomeAction {
 get('^/some/exec/(?<name>.+)$', "SomeAction"); // defaults to execute
 get('^/some/foo/(?<name>.+)$', "SomeAction::foo");
 
-// ---
 
-// protect('/\/admin\/.*$/', config('userProvider'))
-//     ->allowRoles(array("admin"))
-//     ->allowUsers(array("anna"))
-//     ->setOnFail(forward('/login'));
+// **********************************************
+// ** Protecting routes                        **
+// **********************************************
 
-// get('/\/lazy\/(?<name>.*)$/', 'Cicada\Examples\LazyAction');
+class MyProtector implements ProtectorInterface
+{
+    public function protect(Request $request)
+    {
+        $secret = $request->query->get('secret');
+        if ($secret !== "foo") {
+            return new Response('You do not have access.', Response::HTTP_FORBIDDEN);
+        }
+    }
+}
 
-// get('/\/lazy$/', 'Cicada\Examples\LazyAction')
-//     ->allowGetField('hello', array( new StringLengthValidator(20) ));
+get('^/protected$', function(Request $request) {
+    return new Response("Welcome. This is protected.");
+})
+->allowGetField('secret');
 
-// get('/\/puttext$/', function() {
-//     return new EchoResponse("Hello World");
-// });
-// put('/\/puttext$/', 'Cicada\Examples\PutTextAction');
-// put('/\/puttextclosure$/', 'Cicada\Examples\PutTextClosureAction');
-
-// get('...', "SomeAction"); // calls 'execute'
-// get('...', "SomeAction::foo");
-// get('...', "SomeAction::bar");
-
-
-
-// get('/\/hello\/(?<name>.*)$/', function($name) {
-//     return new EchoResponse("Hello Parameter: " .$name);
-// });
-
-// // Allowed GET param test1, test2, test3
-// get('/\/paramtest$/', function() {
-//     $request = '';
-//     $keys = array_keys($_GET);
-//     foreach ($keys as $key) {
-//         $request .= $key." -> #". $_GET[$key]."#<br/>".PHP_EOL;
-//     }
-//     return new EchoResponse("<h1>Get Parameter</h1>" .PHP_EOL.$request);
-
-// })
-//     ->allowGetField("test1",  array( new StringLengthValidator(3) ))
-//     ->allowGetField("test2",  array( new StringLengthValidator(3) ))
-//     ->allowGetField("test3",  array( new StringLengthValidator(3) ));
-
-// get('/\/logout$/', function() {
-//     (new LogoutAction())->execute();
-//     return new PhpResponse('auth/login.php');
-// });
-
-// get('/\/login$/', function() {
-//     return new PhpResponse('auth/login.php');
-// });
-
-// post('/\/login\/do$/', function() {
-//     $username = readPost('username');
-//     $password = readPost('password');
-
-//     $action = new LoginAction($username, $password);
-//     $action->setUserProvider(config('userProvider'));
-//     $result = $action->execute();
-
-//     if ($result == Action::SUCCESS) {
-//         $echo = new EchoResponse();
-//         $echo->addHeader("Location: /admin/dashboard");
-//         return $echo;
-//     } else {
-//         return new PhpResponse('auth/login.php', array("username" => $username));
-//     }
-// })
-//     ->allowPostField("username", array( new StringLengthValidator(20) ))
-//     ->allowPostField("password", array( new StringLengthValidator(20) ));
-
-// get('/\/phptemplate\/decorator$/', function() {
-//     return phpResponse('helloworld.php')->decorate('base.php')->values(['name' => "myname", 'ups' => 'huhu']);
-// });
-
-// get('/\/phptemplate\/(?<name>.*)$/', function($name) {
-//     return new PhpResponse('helloworld.php', array( 'name' => $name, 'ups' => 'huhu'));
-// });
-
-// get('/\/admin\/dashboard$/', function() {
-//     return new EchoResponse('You are seeing the dashboard. <a href="/logout">Logout</a>');
-// });
-
-// get('/\/admin/', forward('/admin/dashboard'));
-// get('/\//', forward('/hello/world'));
+protect('^/protected', new MyProtector());
