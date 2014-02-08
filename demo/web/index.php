@@ -1,4 +1,4 @@
-<?php
+<pre><?php
 /*  Copyright 2013-2014 Christian Grobmeier
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,47 +14,71 @@
  *  language governing permissions and limitations under the License.
  */
 
-use Cicada\Configuration;
-use Cicada\Routing\NoRouteException;
-use Cicada\Routing\Router;
+use Cicada\Application;
+use Cicada\Routing\ProtectorInterface;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-
-// define('CLASS_DIR', '../lib/');
-define('APP_DIR', '../app/');
-
-// set_include_path(get_include_path().PATH_SEPARATOR.CLASS_DIR);
-// spl_autoload_register();
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-require APP_DIR.'config.php';
+$app = new Application();
 
-// Init logging
-Logger::configure(include APP_DIR.'logging.php');
-$logger = Logger::getLogger("main");
-$logger->info("Starting Cicada");
+///
+/// Inline callbacks
+///
 
-// Include routes from configuration
-$config = Configuration::getInstance();
-foreach ($config->get('routes') as $routeFile) {
-    include_once($routeFile);
+$app->get('^/$', function(Application $app, Request $request) {
+    return new Response('Home sweet home.');
+});
+
+$app->get('^/hello$', function(Application $app, Request $request) {
+    return new RedirectResponse('/hello/world');
+});
+
+$app->get('^/hello/world$', function(Application $app, Request $request) {
+    return new Response("Hello World!");
+});
+
+$app->get('^/hello/(?<name>\\w+)$', function(Application $app, Request $request, $name) {
+    return new Response("Hello $name!");
+});
+
+
+///
+/// Method callbacks
+///
+
+class MyController
+{
+    public function hello()
+    {
+        return new Response("Hello from controller");
+    }
 }
 
-try {
-    $request = Request::createFromGlobals();
-    $route = Router::getInstance()->route($request);
+$app->get('^/controller', "MyController::hello");
 
-    /** @var Response $response */
-    $response = $route();
-    $response->prepare($request);
-    $response->send();
+///
+/// Protection
+///
 
-} catch (UnexpectedValueException $e) {
-    echo $e->getMessage();
-} catch (NoRouteException $e) {
-    echo $e->getMessage();
-} catch (Exception $e) {
-    echo $e->getTraceAsString();
-}
+$protector = function(Application $app, Request $request) {
+    $secret = $request->query->get('secret');
+    if ($secret !== 'foo') {
+        return new Response("You didn't say the magic word!", Response::HTTP_FORBIDDEN);
+    }
+};
+
+$app->get('/protected', function(Application $app, Request $request) {
+    return new Response('You\'re in. Congrats.');
+})
+->allowGetField('secret')
+->before($protector);
+
+///
+/// Run the app
+///
+
+$app->run();

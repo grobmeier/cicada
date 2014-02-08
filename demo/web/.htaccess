@@ -17,4 +17,4 @@
 RewriteEngine on
 RewriteCond %{REQUEST_URI} !^.*/(static)($|/.*$) [NC]
 RewriteCond %{REQUEST_URI} !^.*/(css)($|/.*$) [NC]
-RewriteRule ^(.*)$ index.php?url=/$1 [L,QSA]
+RewriteRule ^ index.php [L,QSA]

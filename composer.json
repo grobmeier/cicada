@@ -20,7 +20,8 @@
     "require": {
         "php": ">=5.4.0",
         "apache/log4php": "2.3.0",
-        "symfony/http-foundation": "2.4.*"
+        "symfony/http-foundation": "2.4.*",
+        "pimple/pimple": "1.*"
     },
     "autoload": {
         "psr-4": {
