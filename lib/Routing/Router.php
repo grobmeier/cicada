@@ -17,12 +17,10 @@
 namespace Cicada\Routing;
 
 use Cicada\ActionExecutor;
-use Cicada\Auth\LoginAction;
 use Cicada\Responses\EchoResponse;
 use Cicada\Session;
+
 use Exception;
-use ReflectionClass;
-use ReflectionFunction;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
