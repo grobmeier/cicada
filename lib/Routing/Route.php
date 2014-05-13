@@ -24,9 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Route
 {
-    /**
-     * Regex patter which matches this route.
-     */
+    /** Pattern which matches this route. */
     private $pattern;
 
     /**
@@ -35,22 +33,19 @@ class Route
      */
     private $callback;
 
-    /**
-     * HTTP method to match.
-     */
+    /** HTTP method to match. */
     private $method = 'GET';
 
-    private $allowedPostFields = array();
-
-    private $allowedGetFields = array();
-
+    /** Array of callbacks to call before the request. */
     private $before = [];
 
+    /** Array of callbacks to call after the request. */
     private $after = [];
+
 
     function __construct($pattern, $callback, $method = 'GET')
     {
-        $this->pattern = '/' . str_replace('/', '\\/', $pattern) . '/';
+        $this->pattern = '/^' . str_replace('/', '\\/', $pattern) . '$/';
         $this->callback = $callback;
         $this->method = $method;
     }
@@ -61,14 +56,25 @@ class Route
     public function matches($url)
     {
         if (preg_match($this->pattern, $url, $matches)) {
-            $this->cleanMatches($matches);
+
+            // Remove entries with int keys to filter out only named matches
+            foreach ($matches as $key => $value) {
+                if (is_int($key)) {
+                    unset($matches[$key]);
+                }
+            }
             return $matches;
         }
 
         return false;
     }
 
-    public function run(Application $app, Request $request, array $matches)
+    /**
+     * Processes the Request and returns an Response.
+     *
+     * @return Response
+     */
+    public function run(Application $app, Request $request, array $arguments)
     {
         // Validate the request
         $this->validate($request);
@@ -81,23 +87,17 @@ class Route
             }
         }
 
-        // Process callback
-        $callback = $this->callback;
-        if (is_string($callback) && strpos('::', $callback) !== false) {
-            $callback = $this->parseClassCallback($callback);
-        }
+        $callback = $this->processCallback($this->callback);
 
-        // Add application and request as first two params
-        $arguments = array_merge([$app, $request], $matches);
+        // Add application and request as first two arguments
+        array_unshift($arguments, $app, $request);
 
-        if (is_callable($callback)) {
-            $response = call_user_func_array($callback, $arguments);
-        } else {
-            return new Response("Invalid callback", Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        // Execute the callback
+        $response = call_user_func_array($callback, $arguments);
 
+        // If callback returns a string, use it to construct a Response
         if (is_string($response)) {
-            $response = new Response($response, 200, ['Content-Type' => 'text/plain']);
+            $response = new Response($response, Response::HTTP_OK, ['Content-Type' => 'text/plain']);
         }
 
         // Call after
@@ -108,29 +108,23 @@ class Route
         return $response;
     }
 
-    public function allowGetField($fieldName, $validators = null)
-    {
-        $this->allowedGetFields[] = $this->wrapField($fieldName, $validators);
-        return $this;
-    }
+    // -- Builder methods ------------------------------------------------------
 
-    public function allowPostField($fieldName, $validators = null)
-    {
-        $this->allowedPostFields[] = $this->wrapField($fieldName, $validators);
-        return $this;
-    }
-
+    /** Adds a callback to execute before the request. */
     public function before($callback)
     {
         $this->before[] = $callback;
         return $this;
     }
 
+    /** Adds a callback to execute after the request. */
     public function after($callback)
     {
         $this->after[] = $callback;
         return $this;
     }
+
+    // -- Accesor methods ------------------------------------------------------
 
     public function getPattern()
     {
@@ -140,6 +134,27 @@ class Route
     public function getMethod()
     {
         return $this->method;
+    }
+
+    // -- Private methods ------------------------------------------------------
+
+    /**
+     * Parses the given callback and returns a callable.
+     *
+     * @param  string|callable $callback
+     * @return callable
+     */
+    private function processCallback($callback)
+    {
+        if (is_string($callback) && strpos('::', $callback) !== false) {
+            $callback = $this->parseClassCallback($callback);
+        }
+
+        if (!is_callable($callback)) {
+            return new Response("Invalid callback", Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $callback;
     }
 
     /**
@@ -163,11 +178,9 @@ class Route
         return [$object, $method];
     }
 
-    private function validate($request)
+    private function validate(Request $request)
     {
         $this->validateMethod($request);
-        $this->validateGet($request);
-        $this->validatePost($request);
     }
 
     private function validateMethod(Request $request)
@@ -175,64 +188,6 @@ class Route
         $method = $request->getMethod();
         if ($method !== $this->method) {
             throw new \UnexpectedValueException("Method: $method not allowed for this request.");
-        }
-    }
-
-    private function validateGet(Request $request)
-    {
-        $getFields = $request->query->all();
-        $this->validateFields($getFields, $this->allowedGetFields);
-    }
-
-    private function validatePost(Request $request)
-    {
-        $postFields = $request->request->all();
-        $this->validateFields($postFields, $this->allowedPostFields);
-    }
-
-    private function validateFields($in, $allowedFields)
-    {
-        $keys = array_keys($in);
-
-        foreach ($keys as $key) {
-            $found = false;
-            foreach ($allowedFields as $allowed) {
-                if ($allowed->fieldName == $key) {
-                    $found = true;
-
-                    if (isset($allowed->validators)) {
-                        /** @var $validator Validator */
-                        foreach ($allowed->validators as $validator) {
-                            $validator->validate($in[$key], $key);
-                        }
-                    }
-
-                    break;
-                }
-            }
-            if (!$found) {
-                throw new \UnexpectedValueException("Field $key not allowed.");
-            }
-        }
-    }
-
-    private function wrapField($fieldName, $validators = null)
-    {
-        $allowed = new \stdClass();
-        $allowed->fieldName = $fieldName;
-        $allowed->validators = $validators;
-        return $allowed;
-    }
-
-    /**
-     * Removes entries with integer keys from given array. Used to filter out
-     * only named matches from $matches array produced by preg_match.
-     */
-    private function cleanMatches(array &$matches) {
-        foreach ($matches as $key => $value) {
-            if (is_int($key)) {
-                unset($matches[$key]);
-            }
         }
     }
 }

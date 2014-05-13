@@ -27,8 +27,6 @@ class Router
 {
     private $routeMap = [];
 
-    private $protectors = [];
-
     public function addRoute(Route $route)
     {
         $method = $route->getMethod();
@@ -38,12 +36,6 @@ class Router
         }
 
         $this->routeMap[$method][] = $route;
-    }
-
-    public function addProtector($pattern, ProtectorInterface $protector)
-    {
-        $pattern = '/' . str_replace('/', '\\/', $pattern) . '/';
-        array_push($this->protectors, [$pattern, $protector]);
     }
 
     /**
