@@ -96,6 +96,10 @@ class Route
             return new Response("Invalid callback", Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+        if (is_string($response)) {
+            $response = new Response($response, 200, ['Content-Type' => 'text/plain']);
+        }
+
         // Call after
         foreach($this->after as $after) {
             $after($app, $request, $response);
