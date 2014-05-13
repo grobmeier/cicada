@@ -26,13 +26,13 @@ class Application extends \Pimple
 {
     public function __construct()
     {
-        $this['router'] = $this->share(function () {
+        $this['router'] = function () {
             return new Routing\Router();
-        });
+        };
 
-        $this['session'] = $this->share(function () {
+        $this['session'] = function () {
             return new Session();
-        });
+        };
     }
 
     function get($pattern, $callback)
