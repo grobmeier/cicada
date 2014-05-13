@@ -11,6 +11,10 @@
             "email": "grobmeier@gmail.com",
             "homepage": "http://www.grobmeier.de",
             "role": "Developer"
+        },{
+            "name": "Ivan Habunek",
+            "email": "ivan.habunek@gmail.com",
+            "role": "Developer"
         }
     ],
     "support": {
@@ -25,8 +29,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Cicada\\": "lib"
-        },
-        "files": ["lib/Functions.php"]
+            "Cicada\\": "src"
+        }
     }
 }
