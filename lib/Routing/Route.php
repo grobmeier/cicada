@@ -17,6 +17,9 @@
 namespace Cicada\Routing;
 
 use Cicada\Application;
+
+use Cicada\Validators\RegexValidator;
+use Cicada\Validators\StringLengthValidator;
 use Cicada\Validators\Validator;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -42,6 +45,7 @@ class Route
     /** Array of callbacks to call after the request. */
     private $after = [];
 
+    private $fieldValidators = [];
 
     function __construct($pattern, $callback, $method = 'GET')
     {
@@ -77,7 +81,7 @@ class Route
     public function run(Application $app, Request $request, array $arguments)
     {
         // Validate the request
-        $this->validate($request);
+        $this->validate($request, $arguments);
 
         // Call before
         foreach($this->before as $before) {
@@ -97,7 +101,7 @@ class Route
 
         // If callback returns a string, use it to construct a Response
         if (is_string($response)) {
-            $response = new Response($response, Response::HTTP_OK, ['Content-Type' => 'text/plain']);
+            $response = new Response($response, Response::HTTP_OK, ['Content-Type' => 'text/html']);
         }
 
         // Call after
@@ -114,13 +118,43 @@ class Route
     public function before($callback)
     {
         $this->before[] = $callback;
+
         return $this;
     }
 
     /** Adds a callback to execute after the request. */
-    public function after($callback)
+    public function after(callable $callback)
     {
         $this->after[] = $callback;
+
+        return $this;
+    }
+
+    public function assert($field, callable $callback)
+    {
+        $this->fieldValidators[$field][] = $callback;
+
+        return $this;
+    }
+
+    public function assertLength($field, $max, $min = 0)
+    {
+        $validator = new StringLengthValidator($max, $min);
+
+        return $this->assertValidator($field, $validator);
+    }
+
+    public function assertRegex($field, $regex)
+    {
+        $validator = new RegexValidator($regex);
+
+        return $this->assertValidator($field, $validator);
+    }
+
+    public function assertValidator($field, Validator $validator)
+    {
+        $this->fieldValidators[$field][] = [$validator, 'validate'];
+
         return $this;
     }
 
@@ -178,9 +212,10 @@ class Route
         return [$object, $method];
     }
 
-    private function validate(Request $request)
+    private function validate(Request $request, array $arguments)
     {
         $this->validateMethod($request);
+        $this->validateFields($request, $arguments);
     }
 
     private function validateMethod(Request $request)
@@ -188,6 +223,28 @@ class Route
         $method = $request->getMethod();
         if ($method !== $this->method) {
             throw new \UnexpectedValueException("Method: $method not allowed for this request.");
+        }
+    }
+
+    private function validateFields(Request $request, array $arguments)
+    {
+        foreach ($this->fieldValidators as $field => $validators) {
+
+            if (!isset($arguments[$field])) {
+                throw new \Exception("Field [$field] missing in request.");
+            }
+
+            $value = $arguments[$field];
+
+            foreach ($validators as $validator) {
+
+                try {
+                    $validator($value);
+                } catch (\Exception $ex) {
+                    $msg = $ex->getMessage();
+                    throw new \Exception("Field \"$field\" failed validation: $msg");
+                }
+            }
         }
     }
 }

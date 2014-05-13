@@ -16,30 +16,23 @@
  */
 namespace Cicada\Validators;
 
-class StringLengthValidator implements Validator {
+/**
+ * Validates values based on a regex expression
+ */
+class RegexValidator implements Validator
+{
+    private $pattern;
 
-    private $max;
-    private $min;
-
-    function __construct($max, $min = 0)
+    public function __construct($pattern)
     {
-        $this->max = $max;
-        $this->min = $min;
+        $this->pattern = "/^$pattern$/";
     }
 
     public function validate($value)
     {
-        if ($value == null) {
-            return;
-        }
-        $length = strlen($value);
-
-        if ($length < $this->min) {
-            throw new \UnexpectedValueException("String length too short. Minimum allowed: $this->min.");
-        }
-
-        if ($length > $this->max) {
-            throw new \UnexpectedValueException("String length too long. Maximum allowed: $this->max.");
+        if (!preg_match($this->pattern, $value)) {
+            $msg = "Value failed regex validation: \"$this->pattern\"";
+            throw new \UnexpectedValueException($msg);
         }
     }
 }
