@@ -37,7 +37,7 @@ class Application extends \Pimple
 
     public function get($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, 'GET');
+        $route = new Route($pattern, $callback, Route::HTTP_GET);
         $this['router']->addRoute($route);
 
         return $route;
@@ -45,7 +45,7 @@ class Application extends \Pimple
 
     public function post($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, 'POST');
+        $route = new Route($pattern, $callback, Route::HTTP_POST);
         $this['router']->addRoute($route);
 
         return $route;
@@ -53,7 +53,7 @@ class Application extends \Pimple
 
     public function put($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, 'PUT');
+        $route = new Route($pattern, $callback, Route::HTTP_PUT);
         $this['router']->addRoute($route);
 
         return $route;
@@ -61,7 +61,15 @@ class Application extends \Pimple
 
     public function delete($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, 'DELETE');
+        $route = new Route($pattern, $callback, Route::HTTP_DELETE);
+        $this['router']->addRoute($route);
+
+        return $route;
+    }
+
+    public function head($pattern, $callback)
+    {
+        $route = new Route($pattern, $callback, Route::HTTP_HEAD);
         $this['router']->addRoute($route);
 
         return $route;

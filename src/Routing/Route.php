@@ -27,6 +27,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Route
 {
+    const HTTP_GET = 'GET';
+    const HTTP_POST = 'POST';
+    const HTTP_PUT = 'PUT';
+    const HTTP_DELETE = 'DELETE';
+    const HTTP_HEAD = 'HEAD';
+
     /** Pattern which matches this route. */
     private $pattern;
 
@@ -37,7 +43,7 @@ class Route
     private $callback;
 
     /** HTTP method to match. */
-    private $method = 'GET';
+    private $method;
 
     /** Array of callbacks to call before the request. */
     private $before = [];
@@ -47,7 +53,7 @@ class Route
 
     private $fieldValidators = [];
 
-    public function __construct($pattern, $callback, $method = 'GET')
+    public function __construct($pattern, $callback, $method = self::HTTP_GET)
     {
         $this->pattern = '/^' . str_replace('/', '\\/', $pattern) . '$/';
         $this->callback = $callback;
