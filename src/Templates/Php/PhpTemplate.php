@@ -19,7 +19,8 @@ namespace Cicada\Templates\Php;
 use Cicada\Configuration;
 use Cicada\Templates\Template;
 
-class PhpTemplate implements Template {
+class PhpTemplate implements Template
+{
     private $base = "../templates/";
     private $templateFile;
     private $decorator;
@@ -27,7 +28,8 @@ class PhpTemplate implements Template {
     private $values;
     private $originalValues;
 
-    function __construct() {
+    public function __construct()
+    {
         /** @var Configuration $configuration */
         $configuration = Configuration::getInstance();
         $base = $configuration->get('cicada.templates.base');
@@ -39,25 +41,29 @@ class PhpTemplate implements Template {
     /**
      * @param $templateFile String path to file
      */
-    public function setTemplateFile($templateFile) {
+    public function setTemplateFile($templateFile)
+    {
         $this->templateFile = $templateFile;
     }
 
-    public function setBase($base) {
+    public function setBase($base)
+    {
         $this->base = $base;
     }
 
     /**
      * @param mixed $decorator
      */
-    public function setDecorator($decorator) {
+    public function setDecorator($decorator)
+    {
         $this->decorator = $decorator;
     }
 
-    public function assignValues($values) {
+    public function assignValues($values)
+    {
         $this->originalValues = $values;
         // makes the array accessible like an object
-        $this->values = (object)$values;
+        $this->values = (object) $values;
     }
 
     /**
@@ -66,22 +72,25 @@ class PhpTemplate implements Template {
      *
      * @param $path
      */
-    public function load($path) {
+    public function load($path)
+    {
         include($this->base.$path);
     }
 
-    public function serialize() {
+    public function serialize()
+    {
         ob_start();
         include($this->base.$this->templateFile);
 
         $content = ob_get_clean();
 
-        if($this->decorator == null) {
+        if ($this->decorator == null) {
             return $content;
         }
 
         ob_start();
         include($this->base.$this->decorator);
+
         return ob_get_clean();
     }
 }

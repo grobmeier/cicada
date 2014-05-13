@@ -47,7 +47,7 @@ class Route
 
     private $fieldValidators = [];
 
-    function __construct($pattern, $callback, $method = 'GET')
+    public function __construct($pattern, $callback, $method = 'GET')
     {
         $this->pattern = '/^' . str_replace('/', '\\/', $pattern) . '$/';
         $this->callback = $callback;
@@ -67,6 +67,7 @@ class Route
                     unset($matches[$key]);
                 }
             }
+
             return $matches;
         }
 
@@ -84,7 +85,7 @@ class Route
         $this->validate($request, $arguments);
 
         // Call before
-        foreach($this->before as $before) {
+        foreach ($this->before as $before) {
             $result = $before($app, $request);
             if (isset($result)) {
                 return $result;
@@ -105,7 +106,7 @@ class Route
         }
 
         // Call after
-        foreach($this->after as $after) {
+        foreach ($this->after as $after) {
             $after($app, $request, $response);
         }
 

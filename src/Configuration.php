@@ -16,29 +16,36 @@
  */
 namespace Cicada;
 
-class Configuration {
+class Configuration
+{
     private static $instance;
 
     private $map = array();
 
-    private function __construct() {
+    private function __construct()
+    {
     }
 
-    public function add($key, $value) {
+    public function add($key, $value)
+    {
         $this->map[$key] = $value;
     }
 
-    public function get($key) {
+    public function get($key)
+    {
         if (isset($this->map[$key])) {
             return $this->map[$key];
         }
+
         return null;
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance == null) {
             self::$instance = new Configuration();
         }
+
         return self::$instance;
     }
 }

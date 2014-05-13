@@ -35,31 +35,35 @@ class Application extends \Pimple
         };
     }
 
-    function get($pattern, $callback)
+    public function get($pattern, $callback)
     {
         $route = new Route($pattern, $callback, 'GET');
         $this['router']->addRoute($route);
+
         return $route;
     }
 
-    function post($pattern, $callback)
+    public function post($pattern, $callback)
     {
         $route = new Route($pattern, $callback, 'POST');
         $this['router']->addRoute($route);
+
         return $route;
     }
 
-    function put($pattern, $callback)
+    public function put($pattern, $callback)
     {
         $route = new Route($pattern, $callback, 'PUT');
         $this['router']->addRoute($route);
+
         return $route;
     }
 
-    function delete($pattern, $callback)
+    public function delete($pattern, $callback)
     {
         $route = new Route($pattern, $callback, 'DELETE');
         $this['router']->addRoute($route);
+
         return $route;
     }
 

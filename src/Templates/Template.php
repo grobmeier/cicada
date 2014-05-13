@@ -16,8 +16,8 @@
  */
 namespace Cicada\Templates;
 
-interface Template {
-
+interface Template
+{
     /**
      * @param $path String path to file
      */

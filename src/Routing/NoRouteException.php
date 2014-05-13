@@ -18,6 +18,6 @@ namespace Cicada\Routing;
 
 use Exception;
 
-class NoRouteException extends Exception {
-
+class NoRouteException extends Exception
+{
 }

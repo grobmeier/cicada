@@ -18,8 +18,6 @@ namespace Cicada\Routing;
 
 use Cicada\Application;
 
-use Exception;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -41,7 +39,7 @@ class Router
     /**
      * Routes the request, and returns a Response.
      *
-     * @param  Request $request
+     * @param  Request  $request
      * @return Response
      */
     public function route(Application $app, Request $request)

@@ -16,12 +16,12 @@
  */
 namespace Cicada\Validators;
 
-class StringLengthValidator implements Validator {
-
+class StringLengthValidator implements Validator
+{
     private $max;
     private $min;
 
-    function __construct($max, $min = 0)
+    public function __construct($max, $min = 0)
     {
         $this->max = $max;
         $this->min = $min;
