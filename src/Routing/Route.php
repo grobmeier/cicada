@@ -33,13 +33,16 @@ class Route
     const HTTP_DELETE = 'DELETE';
     const HTTP_HEAD = 'HEAD';
 
-    /** Pattern which matches this route. */
+    /** The route's path, e.g. `/user/{id}/posts`. */
+    private $path;
+
+    /** The regex pattern compiled from the route path. */
     private $pattern;
 
-    /**
-     * Callback to be executed on matched route.
-     * @var callable
-     */
+    /** Array of regex pattern mapped to request arguments. */
+    private $asserts = [];
+
+    /** Callback to be executed on matched route. */
     private $callback;
 
     /** HTTP method to match. */
@@ -53,9 +56,9 @@ class Route
 
     private $fieldValidators = [];
 
-    public function __construct($pattern, $callback, $method = self::HTTP_GET)
+    public function __construct($path, $callback, $method = self::HTTP_GET)
     {
-        $this->pattern = '/^' . str_replace('/', '\\/', $pattern) . '$/';
+        $this->path = $path;
         $this->callback = $callback;
         $this->method = $method;
     }
@@ -65,7 +68,9 @@ class Route
      */
     public function matches($url)
     {
-        if (preg_match($this->pattern, $url, $matches)) {
+        $pattern = $this->getRegexPattern();
+
+        if (preg_match($pattern, $url, $matches)) {
 
             // Remove entries with int keys to filter out only named matches
             foreach ($matches as $key => $value) {
@@ -87,8 +92,7 @@ class Route
      */
     public function run(Application $app, Request $request, array $arguments)
     {
-        // Validate the request
-        $this->validate($request, $arguments);
+        $this->validateRequest($request, $arguments);
 
         // Call before
         foreach ($this->before as $before) {
@@ -137,28 +141,35 @@ class Route
         return $this;
     }
 
-    public function assert($field, callable $callback)
+    /** Set a regex pattern for a field. */
+    public function assert($field, $pattern)
     {
-        $this->fieldValidators[$field][] = $callback;
+        $this->asserts[$field] = $pattern;
 
         return $this;
     }
 
-    public function assertLength($field, $max, $min = 0)
+    public function validate($field, $validator)
+    {
+        if (is_callable($validator)) {
+            $this->fieldValidators[$field][] = $validator;
+        } elseif ($validator instanceof Validator) {
+            $this->fieldValidators[$field][] = [$validator, 'validate'];
+        } else {
+            throw new \InvalidArgumentException("Validator must be callable or implement ValidatorInterface");
+        }
+
+        return $this;
+    }
+
+    public function validateLength($field, $max, $min = 0)
     {
         $validator = new StringLengthValidator($max, $min);
 
-        return $this->assertValidator($field, $validator);
+        return $this->validateValidator($field, $validator);
     }
 
-    public function assertRegex($field, $regex)
-    {
-        $validator = new RegexValidator($regex);
-
-        return $this->assertValidator($field, $validator);
-    }
-
-    public function assertValidator($field, Validator $validator)
+    public function validateValidator($field, Validator $validator)
     {
         $this->fieldValidators[$field][] = [$validator, 'validate'];
 
@@ -167,8 +178,17 @@ class Route
 
     // -- Accesor methods ------------------------------------------------------
 
-    public function getPattern()
+    public function getPath()
     {
+        return $this->path;
+    }
+
+    public function getRegexPattern()
+    {
+        if (!isset($this->pattern)) {
+            $this->pattern = $this->processPath($this->path, $this->asserts);
+        }
+
         return $this->pattern;
     }
 
@@ -179,6 +199,22 @@ class Route
 
     // -- Private methods ------------------------------------------------------
 
+    private function processPath($path, $asserts)
+    {
+        $callback = function($matches) use ($asserts) {
+            $name = $matches[1];
+            $pattern = isset($asserts[$name]) ? $asserts[$name] : ".+";
+
+            return "(?<$name>$pattern)";
+        };
+
+        $pattern = preg_replace_callback('/{([^}]+)}/', $callback, $path);
+
+        $pattern = str_replace('/','\\/', $pattern);
+
+        return "/^$pattern$/";
+    }
+
     /**
      * Parses the given callback and returns a callable.
      *
@@ -187,12 +223,12 @@ class Route
      */
     private function processCallback($callback)
     {
-        if (is_string($callback) && strpos('::', $callback) !== false) {
+        if (is_string($callback) && strpos($callback, '::') !== false) {
             $callback = $this->parseClassCallback($callback);
         }
 
         if (!is_callable($callback)) {
-            return new Response("Invalid callback", Response::HTTP_INTERNAL_SERVER_ERROR);
+            throw new \Exception("Invalid callback: $callback");
         }
 
         return $callback;
@@ -219,7 +255,7 @@ class Route
         return [$object, $method];
     }
 
-    private function validate(Request $request, array $arguments)
+    private function validateRequest(Request $request, array $arguments)
     {
         $this->validateMethod($request);
         $this->validateFields($request, $arguments);
