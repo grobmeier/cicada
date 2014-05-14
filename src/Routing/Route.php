@@ -33,6 +33,15 @@ class Route
     const HTTP_DELETE = 'DELETE';
     const HTTP_HEAD = 'HEAD';
 
+    /** Array of known HTTP methods. */
+    private $methods = [
+        self::HTTP_GET,
+        self::HTTP_POST,
+        self::HTTP_PUT,
+        self::HTTP_DELETE,
+        self::HTTP_HEAD,
+    ];
+
     /** The route's path, e.g. `/user/{id}/posts`. */
     private $path;
 
@@ -48,6 +57,9 @@ class Route
     /** HTTP method to match. */
     private $method;
 
+    /** The prefix to put before the route. */
+    private $prefix = '';
+
     /** Array of callbacks to call before the request. */
     private $before = [];
 
@@ -56,11 +68,19 @@ class Route
 
     private $fieldValidators = [];
 
-    public function __construct($path, $callback, $method = self::HTTP_GET)
+    public function __construct(
+        $path = '/',
+        $callback = null,
+        $method = null,
+        $before = [],
+        $after = []
+    )
     {
         $this->path = $path;
         $this->callback = $callback;
         $this->method = $method;
+        $this->before = $before;
+        $this->after = $after;
     }
 
     /**
@@ -86,7 +106,7 @@ class Route
     }
 
     /**
-     * Processes the Request and returns an Response.
+     * Processes the Request and returns a Response.
      *
      * @return Response
      */
@@ -137,6 +157,42 @@ class Route
     public function after(callable $callback)
     {
         $this->after[] = $callback;
+
+        return $this;
+    }
+
+    /** Sets the route's HTTP method. */
+    public function method($method)
+    {
+        if (!in_array($method, $this->methods)) {
+            throw new \InvalidArgumentException("Unknown HTTP method: $method");
+        }
+
+        $this->method = $method;
+
+        return $this;
+    }
+
+    /** Sets the route's path. */
+    public function path($path)
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    /** Sets the route's callback. */
+    public function callback($callback)
+    {
+        $this->callback = $callback;
+
+        return $this;
+    }
+
+    /** Sets the route's prefix. */
+    public function prefix($prefix)
+    {
+        $this->prefix = $prefix;
 
         return $this;
     }
@@ -210,8 +266,16 @@ class Route
 
         $pattern = preg_replace_callback('/{([^}]+)}/', $callback, $path);
 
+        // Prepend the prefix
+        $pattern = $this->prefix . $pattern;
+
+        // Avoid double slashes
+        $pattern = preg_replace('/\/+/', '/', $pattern);
+
+        // Escape slashes, used as delimiter in regex
         $pattern = str_replace('/','\\/', $pattern);
 
+        // Add start and and delimiters
         return "/^$pattern$/";
     }
 

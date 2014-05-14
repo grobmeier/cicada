@@ -17,6 +17,7 @@
 namespace Cicada;
 
 use Cicada\Routing\Route;
+use Cicada\Routing\RouteCollection;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +27,8 @@ class Application extends \Pimple
 {
     public function __construct()
     {
+        parent::__construct();
+
         $this['router'] = function () {
             return new Routing\Router();
         };
@@ -33,6 +36,11 @@ class Application extends \Pimple
         $this['session'] = function () {
             return new Session();
         };
+
+        $this['collection_factory'] = $this->factory(function() {
+            $route = new Route('/');
+            return new RouteCollection($route);
+        });
     }
 
     public function get($pattern, $callback)
@@ -73,6 +81,11 @@ class Application extends \Pimple
         $this['router']->addRoute($route);
 
         return $route;
+    }
+
+    public function register(RouteCollection $collection)
+    {
+        $this['router']->addRouteCollection($collection);
     }
 
     public function run()

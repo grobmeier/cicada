@@ -23,17 +23,19 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Router
 {
-    private $routeMap = [];
+    private $routes = [];
 
     public function addRoute(Route $route)
     {
-        $method = $route->getMethod();
+        $this->routes[] = $route;
+    }
 
-        if (!isset($this->routeMap[$method])) {
-            $this->routeMap[$method] = [];
+    public function addRouteCollection(RouteCollection $collection)
+    {
+        $routes = $collection->getRoutes();
+        foreach ($routes as $route) {
+            $this->routes[] = $route;
         }
-
-        $this->routeMap[$method][] = $route;
     }
 
     /**
@@ -47,9 +49,8 @@ class Router
         $url = $request->getPathInfo();
         $method = $request->getMethod();
 
-        if (isset($this->routeMap[$method])) {
-            /** @var $route Route */
-            foreach ($this->routeMap[$method] as $route) {
+        foreach ($this->routes as $route) {
+            if ($route->getMethod() == $method) {
                 $matches = $route->matches($url);
                 if ($matches !== false) {
                     return $route->run($app, $request, $matches);
