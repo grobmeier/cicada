@@ -1,7 +1,0 @@
-# File Managed by Puppet
-
-[mysql]
-local-infile=1
-
-[client]
-password=<%= scope.lookupvar('mysql::real_root_password') %>
