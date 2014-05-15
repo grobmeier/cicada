@@ -108,6 +108,10 @@ class Route
     /**
      * Processes the Request and returns a Response.
      *
+     * @param $app
+     * @param $request
+     * @param $arguments
+     *
      * @return Response
      */
     public function run(Application $app, Request $request, array $arguments)
@@ -232,7 +236,7 @@ class Route
         return $this;
     }
 
-    // -- Accesor methods ------------------------------------------------------
+    // -- Accessor methods ------------------------------------------------------
 
     public function getPath()
     {
@@ -284,6 +288,7 @@ class Route
      *
      * @param  string|callable $callback
      * @return callable
+     * @throws \Exception when the callback isn't callable
      */
     private function processCallback($callback)
     {
@@ -300,7 +305,7 @@ class Route
 
     /**
      * Parses a string like "SomeClass::someMethod" and returns a corresponding
-     * callable array for method someMehod on a new instance of SomeClass.
+     * callable array for method someMethod on a new instance of SomeClass.
      */
     private function parseClassCallback($callback)
     {
