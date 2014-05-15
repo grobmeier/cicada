@@ -41,7 +41,8 @@ class Router
     /**
      * Routes the request, and returns a Response.
      *
-     * @param  Request  $request
+     * @param Application $app
+     * @param Request $request
      * @return Response
      */
     public function route(Application $app, Request $request)
