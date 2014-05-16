@@ -1,0 +1,1 @@
+<div><?php echo $this->values->mycontentfield; ?></div>
