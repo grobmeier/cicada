@@ -16,51 +16,38 @@
  */
 namespace Cicada\Responses;
 
-use Cicada\Configuration;
-
-// TODO refactor to PhpResponse
 class PhpResponse
 {
-    private $base = "../templates/";
+    private $templateFolder = '';
     private $templateFile;
     private $decorator;
+    private $decoratorVariable = 'content';
 
     private $values;
     private $originalValues;
 
-    public function __construct()
-    {
-        // TODO do not depend to Configuration
-        /** @var Configuration $configuration */
-        $configuration = Configuration::getInstance();
-        $base = $configuration->get('cicada.templates.base');
-        if ($base != null) {
-            $this->base = $base;
-        }
-    }
-
-    /**
-     * @param $templateFile String path to file
-     */
-    public function setTemplateFile($templateFile)
+    public function __construct($templateFile, $templateFolder = '.')
     {
         $this->templateFile = $templateFile;
+        $this->templateFolder = realpath($templateFolder).'/';
     }
 
-    public function setBase($base)
+    public function setTemplateFolder($templateFolder)
     {
-        $this->base = $base;
+        $this->templateFolder = realpath($templateFolder).'/';
     }
 
     /**
-     * @param mixed $decorator
+     * @param string $decorator the name of the decorator file
+     * @param string $variableName the name of the values property in which the nested content is available for the decorator
      */
-    public function setDecorator($decorator)
+    public function setDecorator($decorator, $variableName)
     {
         $this->decorator = $decorator;
+        $this->decoratorVariable = $variableName;
     }
 
-    public function assignValues($values)
+    public function setValues($values)
     {
         $this->originalValues = $values;
         // makes the array accessible like an object
@@ -75,23 +62,30 @@ class PhpResponse
      */
     public function load($path)
     {
-        include($this->base.$path);
+        include($this->templateFolder.$path);
     }
 
-    // TODO use render
-    public function serialize()
+    /**
+     * Renders a php template
+     *
+     * @return string
+     */
+    public function render()
     {
         ob_start();
-        include($this->base.$this->templateFile);
+        include($this->templateFolder.$this->templateFile);
 
         $content = ob_get_clean();
 
         if ($this->decorator == null) {
             return $content;
+        } else {
+            $contentName = $this->decoratorVariable;
+            $this->values->$contentName = $content;
         }
 
         ob_start();
-        include($this->base.$this->decorator);
+        include($this->templateFolder.$this->decorator);
 
         return ob_get_clean();
     }
