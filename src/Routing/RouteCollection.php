@@ -18,10 +18,6 @@ namespace Cicada\Routing;
 
 use Cicada\Application;
 
-use Cicada\Validators\RegexValidator;
-use Cicada\Validators\StringLengthValidator;
-use Cicada\Validators\Validator;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

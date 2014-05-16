@@ -18,10 +18,6 @@ namespace Cicada\Routing;
 
 use Cicada\Application;
 
-use Cicada\Validators\RegexValidator;
-use Cicada\Validators\StringLengthValidator;
-use Cicada\Validators\Validator;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -65,8 +61,6 @@ class Route
 
     /** Array of callbacks to call after the request. */
     private $after = [];
-
-    private $fieldValidators = [];
 
     public function __construct(
         $path = '/',
@@ -116,8 +110,6 @@ class Route
      */
     public function run(Application $app, Request $request, array $arguments)
     {
-        $this->validateRequest($request, $arguments);
-
         // Call before
         foreach ($this->before as $before) {
             $result = $before($app, $request);
@@ -209,33 +201,6 @@ class Route
         return $this;
     }
 
-    public function validate($field, $validator)
-    {
-        if (is_callable($validator)) {
-            $this->fieldValidators[$field][] = $validator;
-        } elseif ($validator instanceof Validator) {
-            $this->fieldValidators[$field][] = [$validator, 'validate'];
-        } else {
-            throw new \InvalidArgumentException("Validator must be callable or implement ValidatorInterface");
-        }
-
-        return $this;
-    }
-
-    public function validateLength($field, $max, $min = 0)
-    {
-        $validator = new StringLengthValidator($max, $min);
-
-        return $this->validateValidator($field, $validator);
-    }
-
-    public function validateValidator($field, Validator $validator)
-    {
-        $this->fieldValidators[$field][] = [$validator, 'validate'];
-
-        return $this;
-    }
-
     // -- Accessor methods ------------------------------------------------------
 
     public function getPath()
@@ -322,41 +287,5 @@ class Route
         }
 
         return [$object, $method];
-    }
-
-    private function validateRequest(Request $request, array $arguments)
-    {
-        $this->validateMethod($request);
-        $this->validateFields($request, $arguments);
-    }
-
-    private function validateMethod(Request $request)
-    {
-        $method = $request->getMethod();
-        if ($method !== $this->method) {
-            throw new \UnexpectedValueException("Method: $method not allowed for this request.");
-        }
-    }
-
-    private function validateFields(Request $request, array $arguments)
-    {
-        foreach ($this->fieldValidators as $field => $validators) {
-
-            if (!isset($arguments[$field])) {
-                throw new \Exception("Field [$field] missing in request.");
-            }
-
-            $value = $arguments[$field];
-
-            foreach ($validators as $validator) {
-
-                try {
-                    $validator($value);
-                } catch (\Exception $ex) {
-                    $msg = $ex->getMessage();
-                    throw new \Exception("Field \"$field\" failed validation: $msg");
-                }
-            }
-        }
     }
 }
