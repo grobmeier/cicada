@@ -41,6 +41,10 @@ class Application extends \Pimple
             $route = new Route('/');
             return new RouteCollection($route);
         });
+
+        $this['exception_handler'] = function() {
+            return new ExceptionHandler();
+        };
     }
 
     public function get($pattern, $callback)
@@ -81,10 +85,28 @@ class Application extends \Pimple
         $this['router']->addRouteCollection($collection);
     }
 
+    public function exception(callable $callback)
+    {
+        $this['exception_handler']->add($callback);
+    }
+
     public function run()
     {
         $request = Request::createFromGlobals();
-        $response = $this['router']->route($this, $request);
+
+        try {
+            // Try to process the request
+            $response = $this['router']->route($this, $request);
+        } catch (\Exception $ex) {
+            // On failure invoke the error handler
+            $response = $this['exception_handler']->handle($ex);
+        }
+
+        // If all else fails...
+        if ($response === null) {
+            return new Response("Page failed to render.", Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
         $response->send();
     }
 }
