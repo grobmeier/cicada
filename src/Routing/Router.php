@@ -50,6 +50,7 @@ class Router
         $url = $request->getPathInfo();
         $method = $request->getMethod();
 
+        /** @var $route Route */
         foreach ($this->routes as $route) {
             if ($route->getMethod() == $method) {
                 $matches = $route->matches($url);
