@@ -16,11 +16,6 @@
  */
 namespace Cicada\Routing;
 
-use Cicada\Application;
-
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-
 class RouteCollection
 {
     /**
