@@ -45,30 +45,30 @@ class Application extends \Pimple
 
     public function get($pattern, $callback)
     {
-        return $this->generic($pattern, $callback, Route::HTTP_GET);
+        return $this->route($pattern, $callback, Route::HTTP_GET);
     }
 
     public function post($pattern, $callback)
     {
-        return $this->generic($pattern, $callback, Route::HTTP_POST);
+        return $this->route($pattern, $callback, Route::HTTP_POST);
     }
 
     public function put($pattern, $callback)
     {
-        return $this->generic($pattern, $callback, Route::HTTP_PUT);
+        return $this->route($pattern, $callback, Route::HTTP_PUT);
     }
 
     public function delete($pattern, $callback)
     {
-        return $this->generic($pattern, $callback, Route::HTTP_DELETE);
+        return $this->route($pattern, $callback, Route::HTTP_DELETE);
     }
 
     public function head($pattern, $callback)
     {
-        return $this->generic($pattern, $callback, Route::HTTP_HEAD);
+        return $this->route($pattern, $callback, Route::HTTP_HEAD);
     }
 
-    private function generic($pattern, $callback, $method)
+    public function route($pattern, $callback, $method)
     {
         $route = new Route($pattern, $callback, $method);
         $this['router']->addRoute($route);
