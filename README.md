@@ -17,7 +17,7 @@ Usage
 
 Minimal application:
 
-```
+```php
 require '../vendor/autoload.php';
 
 use Cicada\Application;
@@ -55,7 +55,7 @@ and return an appropriate response.
 For example, if you want to catch a custom NotImplementedException and return a
 custom error message:
 
-```
+```php
 $app->exception(function (NotImplementedException $ex) {
     $msg = "Dreadfully sorry, old chap, but tis' not implemented yet.";
     return new Response($msg, Response::HTTP_INTERNAL_SERVER_ERROR);
