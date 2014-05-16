@@ -20,12 +20,12 @@ class RouteCollection
 {
     /**
      * The route on which all routes within the collection are based.
-     * @var Cicada\Routing\Route
+     * @var \Cicada\Routing\Route
      */
     private $baseRoute;
 
     /**
-     * Array of routes within the collecton.
+     * Array of routes within the collection.
      * @var array
      */
     private $routes  = [];
