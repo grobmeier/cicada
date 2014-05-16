@@ -14,44 +14,22 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-namespace Cicada\Responses;
+namespace Cicada\Renderer;
 
 class PhpRenderer
 {
-    private $templateFolder = '';
-    private $templateFile;
-    private $decorator;
+    private $templateFolder;
     private $decoratorVariable = 'content';
-
     private $values;
-    private $originalValues;
 
-    public function __construct($templateFile, $templateFolder = '.')
+    public function __construct($templateDir = '.')
     {
-        $this->templateFile = $templateFile;
-        $this->templateFolder = realpath($templateFolder).'/';
+        $this->templateFolder = realpath($templateDir).'/';
     }
 
     public function setTemplateFolder($templateFolder)
     {
         $this->templateFolder = realpath($templateFolder).'/';
-    }
-
-    /**
-     * @param string $decorator the name of the decorator file
-     * @param string $variableName the name of the values property in which the nested content is available for the decorator
-     */
-    public function setDecorator($decorator, $variableName)
-    {
-        $this->decorator = $decorator;
-        $this->decoratorVariable = $variableName;
-    }
-
-    public function setValues($values)
-    {
-        $this->originalValues = $values;
-        // makes the array accessible like an object
-        $this->values = (object) $values;
     }
 
     /**
@@ -68,24 +46,36 @@ class PhpRenderer
     /**
      * Renders a php template
      *
+     * @param $templateFile
+     * @param $variables
+     * @param $decoratorConfig
      * @return string
      */
-    public function render()
+    public function render($templateFile, $variables = [], $decoratorConfig = [])
     {
+        $decorator = null;
+        $decoratorVariable = 'content';
+
+        if (sizeOf($decoratorConfig) > 0) {
+            $decorator = $decoratorConfig['file'];
+            $decoratorVariable = $decoratorConfig['name'];
+        }
+
+        $this->values = (object) $variables;
+
         ob_start();
-        include($this->templateFolder.$this->templateFile);
+        include($this->templateFolder.$templateFile);
 
         $content = ob_get_clean();
 
-        if ($this->decorator == null) {
+        if ($decorator == null) {
             return $content;
         } else {
-            $contentName = $this->decoratorVariable;
-            $this->values->$contentName = $content;
+            $this->values->$decoratorVariable = $content;
         }
 
         ob_start();
-        include($this->templateFolder.$this->decorator);
+        include($this->templateFolder.$decorator);
 
         return ob_get_clean();
     }

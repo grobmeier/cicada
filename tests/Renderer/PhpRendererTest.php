@@ -14,40 +14,40 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-namespace Cicada\Responses;
+namespace Cicada\Renderer;
 
 class PhpResponseTest extends \PHPUnit_Framework_TestCase
 {
     public function testBasic()
     {
-        $response = new PhpRenderer("test.php");
-        $response->setTemplateFolder('./tests/resources/phptemplates/');
-        $output = $response->render();
+        $response = new PhpRenderer('./tests/resources/phptemplates/');
+        $output = $response->render('test.php');
 
         $this->assertEquals('Hello World', $output);
     }
 
     public function testValues()
     {
-        $response = new PhpRenderer('test-with-values.php', './tests/resources/phptemplates/');
-        $response->setValues([
+        $response = new PhpRenderer('./tests/resources/phptemplates/');
+        $output = $response->render('test-with-values.php', [
             'given_name' => 'John',
             'name' => 'Doe',
         ]);
-        $output = $response->render();
 
         $this->assertEquals('Hello: John Doe', $output);
     }
 
     public function testDecorator()
     {
-        $response = new PhpRenderer('test-with-values.php', './tests/resources/phptemplates/');
-        $response->setValues([
+        $response = new PhpRenderer('./tests/resources/phptemplates/');
+
+        $output = $response->render('test-with-values.php', [
             'given_name' => 'John',
             'name' => 'Doe',
+        ], [
+            'file' => 'decorator.php',
+            'name' => 'mycontentfield'
         ]);
-        $response->setDecorator('decorator.php', 'mycontentfield');
-        $output = $response->render();
 
         $this->assertEquals('<div>Hello: John Doe</div>', $output);
     }
