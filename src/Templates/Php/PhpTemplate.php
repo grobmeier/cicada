@@ -19,7 +19,9 @@ namespace Cicada\Templates\Php;
 use Cicada\Configuration;
 use Cicada\Templates\Template;
 
-class PhpTemplate implements Template
+
+// TODO refactor to PhpResponse
+class PhpTemplate
 {
     private $base = "../templates/";
     private $templateFile;
@@ -30,6 +32,7 @@ class PhpTemplate implements Template
 
     public function __construct()
     {
+        // TODO do not depend to Configuration
         /** @var Configuration $configuration */
         $configuration = Configuration::getInstance();
         $base = $configuration->get('cicada.templates.base');
@@ -77,6 +80,7 @@ class PhpTemplate implements Template
         include($this->base.$path);
     }
 
+    // TODO use render
     public function serialize()
     {
         ob_start();
