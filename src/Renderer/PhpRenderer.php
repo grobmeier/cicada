@@ -16,7 +16,7 @@
  */
 namespace Cicada\Responses;
 
-class PhpResponse
+class PhpRenderer
 {
     private $templateFolder = '';
     private $templateFile;

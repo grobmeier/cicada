@@ -20,7 +20,7 @@ class PhpResponseTest extends \PHPUnit_Framework_TestCase
 {
     public function testBasic()
     {
-        $response = new PhpResponse("test.php");
+        $response = new PhpRenderer("test.php");
         $response->setTemplateFolder('./tests/resources/phptemplates/');
         $output = $response->render();
 
@@ -29,7 +29,7 @@ class PhpResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testValues()
     {
-        $response = new PhpResponse('test-with-values.php', './tests/resources/phptemplates/');
+        $response = new PhpRenderer('test-with-values.php', './tests/resources/phptemplates/');
         $response->setValues([
             'given_name' => 'John',
             'name' => 'Doe',
@@ -41,7 +41,7 @@ class PhpResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testDecorator()
     {
-        $response = new PhpResponse('test-with-values.php', './tests/resources/phptemplates/');
+        $response = new PhpRenderer('test-with-values.php', './tests/resources/phptemplates/');
         $response->setValues([
             'given_name' => 'John',
             'name' => 'Doe',
