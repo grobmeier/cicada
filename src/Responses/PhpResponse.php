@@ -14,14 +14,12 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-namespace Cicada\Templates\Php;
+namespace Cicada\Responses;
 
 use Cicada\Configuration;
-use Cicada\Templates\Template;
-
 
 // TODO refactor to PhpResponse
-class PhpTemplate
+class PhpResponse
 {
     private $base = "../templates/";
     private $templateFile;
