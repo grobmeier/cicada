@@ -1,9 +1,9 @@
 {
-    "name": "grobmeier/cicada",
+    "name": "cicada/cicada",
     "type": "library",
     "description": "Tiny PHP framework for quickly creating webapps, inspired by Rubys Sinatra",
     "keywords": ["framework"],
-    "homepage": "https://github.com/grobmeier/cicada",
+    "homepage": "https://github.com/cicada/cicada",
     "license": "Apache-2.0",
     "authors": [
         {
@@ -18,8 +18,8 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/grobmeier/cicada/issues",
-        "source": "https://github.com/grobmeier/cicada"
+        "issues": "https://github.com/cicada/cicada/issues",
+        "source": "https://github.com/cicada/cicada"
     },
     "require": {
         "php": ">=5.4.0",
@@ -27,9 +27,17 @@
         "symfony/http-foundation": "2.4.*",
         "pimple/pimple": "2.*"
     },
+    "require-dev": {
+        "phpunit/phpunit": "4.1"
+    },
     "autoload": {
         "psr-4": {
             "Cicada\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cicada\\Tests\\": "tests"
         }
     }
 }

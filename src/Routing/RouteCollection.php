@@ -16,25 +16,16 @@
  */
 namespace Cicada\Routing;
 
-use Cicada\Application;
-
-use Cicada\Validators\RegexValidator;
-use Cicada\Validators\StringLengthValidator;
-use Cicada\Validators\Validator;
-
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-
 class RouteCollection
 {
     /**
      * The route on which all routes within the collection are based.
-     * @var Cicada\Routing\Route
+     * @var \Cicada\Routing\Route
      */
     private $baseRoute;
 
     /**
-     * Array of routes within the collecton.
+     * Array of routes within the collection.
      * @var array
      */
     private $routes  = [];

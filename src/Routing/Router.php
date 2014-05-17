@@ -41,7 +41,8 @@ class Router
     /**
      * Routes the request, and returns a Response.
      *
-     * @param  Request  $request
+     * @param Application $app
+     * @param Request $request
      * @return Response
      */
     public function route(Application $app, Request $request)
@@ -49,6 +50,7 @@ class Router
         $url = $request->getPathInfo();
         $method = $request->getMethod();
 
+        /** @var $route Route */
         foreach ($this->routes as $route) {
             if ($route->getMethod() == $method) {
                 $matches = $route->matches($url);
@@ -60,5 +62,10 @@ class Router
 
         // Return HTTP 404
         return new Response("Route not found", Response::HTTP_NOT_FOUND);
+    }
+
+    public function getRoutes()
+    {
+        return $this->routes;
     }
 }

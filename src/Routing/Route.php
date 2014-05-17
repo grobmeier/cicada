@@ -17,10 +17,7 @@
 namespace Cicada\Routing;
 
 use Cicada\Application;
-
-use Cicada\Validators\RegexValidator;
-use Cicada\Validators\StringLengthValidator;
-use Cicada\Validators\Validator;
+use Cicada\Invoker;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -66,16 +63,13 @@ class Route
     /** Array of callbacks to call after the request. */
     private $after = [];
 
-    private $fieldValidators = [];
-
     public function __construct(
         $path = '/',
         $callback = null,
         $method = null,
         $before = [],
         $after = []
-    )
-    {
+    ) {
         $this->path = $path;
         $this->callback = $callback;
         $this->method = $method;
@@ -108,12 +102,14 @@ class Route
     /**
      * Processes the Request and returns a Response.
      *
+     * @param $app
+     * @param $request
+     * @param $arguments
+     *
      * @return Response
      */
     public function run(Application $app, Request $request, array $arguments)
     {
-        $this->validateRequest($request, $arguments);
-
         // Call before
         foreach ($this->before as $before) {
             $result = $before($app, $request);
@@ -122,13 +118,8 @@ class Route
             }
         }
 
-        $callback = $this->processCallback($this->callback);
-
-        // Add application and request as first two arguments
-        array_unshift($arguments, $app, $request);
-
-        // Execute the callback
-        $response = call_user_func_array($callback, $arguments);
+        $invoker = new Invoker();
+        $response = $invoker->invoke($this->callback, $arguments, [$app, $request]);
 
         // If callback returns a string, use it to construct a Response
         if (is_string($response)) {
@@ -205,34 +196,12 @@ class Route
         return $this;
     }
 
-    public function validate($field, $validator)
+    // -- Accessor methods ------------------------------------------------------
+
+    public function getCallback()
     {
-        if (is_callable($validator)) {
-            $this->fieldValidators[$field][] = $validator;
-        } elseif ($validator instanceof Validator) {
-            $this->fieldValidators[$field][] = [$validator, 'validate'];
-        } else {
-            throw new \InvalidArgumentException("Validator must be callable or implement ValidatorInterface");
-        }
-
-        return $this;
+        return $this->callback;
     }
-
-    public function validateLength($field, $max, $min = 0)
-    {
-        $validator = new StringLengthValidator($max, $min);
-
-        return $this->validateValidator($field, $validator);
-    }
-
-    public function validateValidator($field, Validator $validator)
-    {
-        $this->fieldValidators[$field][] = [$validator, 'validate'];
-
-        return $this;
-    }
-
-    // -- Accesor methods ------------------------------------------------------
 
     public function getPath()
     {
@@ -253,11 +222,23 @@ class Route
         return $this->method;
     }
 
+    public function getBefore()
+    {
+        return $this->before;
+    }
+
+
+    public function getAfter()
+    {
+        return $this->after;
+    }
+
     // -- Private methods ------------------------------------------------------
 
     private function processPath($path, $asserts)
     {
-        $callback = function($matches) use ($asserts) {
+        // Replace placeholders in curly braces with named regex groups
+        $callback = function ($matches) use ($asserts) {
             $name = $matches[1];
             $pattern = isset($asserts[$name]) ? $asserts[$name] : ".+";
 
@@ -273,85 +254,9 @@ class Route
         $pattern = preg_replace('/\/+/', '/', $pattern);
 
         // Escape slashes, used as delimiter in regex
-        $pattern = str_replace('/','\\/', $pattern);
+        $pattern = str_replace('/', '\\/', $pattern);
 
         // Add start and and delimiters
         return "/^$pattern$/";
-    }
-
-    /**
-     * Parses the given callback and returns a callable.
-     *
-     * @param  string|callable $callback
-     * @return callable
-     */
-    private function processCallback($callback)
-    {
-        if (is_string($callback) && strpos($callback, '::') !== false) {
-            $callback = $this->parseClassCallback($callback);
-        }
-
-        if (!is_callable($callback)) {
-            throw new \Exception("Invalid callback: $callback");
-        }
-
-        return $callback;
-    }
-
-    /**
-     * Parses a string like "SomeClass::someMethod" and returns a corresponding
-     * callable array for method someMehod on a new instance of SomeClass.
-     */
-    private function parseClassCallback($callback)
-    {
-        list($class, $method) = explode('::', $callback);
-
-        if (!class_exists($class)) {
-            throw new \Exception("Class $class does not exist.");
-        }
-
-        $object = new $class();
-
-        if (!method_exists($object, $method)) {
-            throw new \Exception("Method $class::$method does not exist.");
-        }
-
-        return [$object, $method];
-    }
-
-    private function validateRequest(Request $request, array $arguments)
-    {
-        $this->validateMethod($request);
-        $this->validateFields($request, $arguments);
-    }
-
-    private function validateMethod(Request $request)
-    {
-        $method = $request->getMethod();
-        if ($method !== $this->method) {
-            throw new \UnexpectedValueException("Method: $method not allowed for this request.");
-        }
-    }
-
-    private function validateFields(Request $request, array $arguments)
-    {
-        foreach ($this->fieldValidators as $field => $validators) {
-
-            if (!isset($arguments[$field])) {
-                throw new \Exception("Field [$field] missing in request.");
-            }
-
-            $value = $arguments[$field];
-
-            foreach ($validators as $validator) {
-
-                try {
-                    $validator($value);
-                } catch (\Exception $ex) {
-                    $msg = $ex->getMessage();
-                    throw new \Exception("Field \"$field\" failed validation: $msg");
-                }
-            }
-        }
     }
 }

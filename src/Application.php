@@ -37,47 +37,44 @@ class Application extends \Pimple
             return new Session();
         };
 
-        $this['collection_factory'] = $this->factory(function() {
+        $this['collection_factory'] = $this->factory(function () {
             $route = new Route('/');
             return new RouteCollection($route);
         });
+
+        $this['exception_handler'] = function () {
+            return new ExceptionHandler();
+        };
     }
 
     public function get($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, Route::HTTP_GET);
-        $this['router']->addRoute($route);
-
-        return $route;
+        return $this->route($pattern, $callback, Route::HTTP_GET);
     }
 
     public function post($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, Route::HTTP_POST);
-        $this['router']->addRoute($route);
-
-        return $route;
+        return $this->route($pattern, $callback, Route::HTTP_POST);
     }
 
     public function put($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, Route::HTTP_PUT);
-        $this['router']->addRoute($route);
-
-        return $route;
+        return $this->route($pattern, $callback, Route::HTTP_PUT);
     }
 
     public function delete($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, Route::HTTP_DELETE);
-        $this['router']->addRoute($route);
-
-        return $route;
+        return $this->route($pattern, $callback, Route::HTTP_DELETE);
     }
 
     public function head($pattern, $callback)
     {
-        $route = new Route($pattern, $callback, Route::HTTP_HEAD);
+        return $this->route($pattern, $callback, Route::HTTP_HEAD);
+    }
+
+    public function route($pattern, $callback, $method)
+    {
+        $route = new Route($pattern, $callback, $method);
         $this['router']->addRoute($route);
 
         return $route;
@@ -88,10 +85,28 @@ class Application extends \Pimple
         $this['router']->addRouteCollection($collection);
     }
 
+    public function exception(callable $callback)
+    {
+        $this['exception_handler']->add($callback);
+    }
+
     public function run()
     {
         $request = Request::createFromGlobals();
-        $response = $this['router']->route($this, $request);
+
+        try {
+            // Try to process the request
+            $response = $this['router']->route($this, $request);
+        } catch (\Exception $ex) {
+            // On failure invoke the error handler
+            $response = $this['exception_handler']->handle($ex);
+        }
+
+        // If all else fails...
+        if ($response === null) {
+            return new Response("Page failed to render.", Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
         $response->send();
     }
 }
