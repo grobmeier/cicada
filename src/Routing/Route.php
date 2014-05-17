@@ -17,6 +17,7 @@
 namespace Cicada\Routing;
 
 use Cicada\Application;
+use Cicada\Invoker;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -118,13 +119,8 @@ class Route
             }
         }
 
-        $callback = $this->processCallback($this->callback);
-
-        // Add application and request as first two arguments
-        array_unshift($arguments, $app, $request);
-
-        // Execute the callback
-        $response = call_user_func_array($callback, $arguments);
+        $invoker = new Invoker();
+        $response = $invoker->invoke($this->callback, $arguments, [$app, $request]);
 
         // If callback returns a string, use it to construct a Response
         if (is_string($response)) {
@@ -263,46 +259,5 @@ class Route
 
         // Add start and and delimiters
         return "/^$pattern$/";
-    }
-
-    /**
-     * Parses the given callback and returns a callable.
-     *
-     * @param  string|callable $callback
-     * @return callable
-     * @throws \Exception when the callback isn't callable
-     */
-    private function processCallback($callback)
-    {
-        if (is_string($callback) && strpos($callback, '::') !== false) {
-            $callback = $this->parseClassCallback($callback);
-        }
-
-        if (!is_callable($callback)) {
-            throw new \Exception("Invalid callback: $callback");
-        }
-
-        return $callback;
-    }
-
-    /**
-     * Parses a string like "SomeClass::someMethod" and returns a corresponding
-     * callable array for method someMethod on a new instance of SomeClass.
-     */
-    private function parseClassCallback($callback)
-    {
-        list($class, $method) = explode('::', $callback);
-
-        if (!class_exists($class)) {
-            throw new \Exception("Class $class does not exist.");
-        }
-
-        $object = new $class();
-
-        if (!method_exists($object, $method)) {
-            throw new \Exception("Method $class::$method does not exist.");
-        }
-
-        return [$object, $method];
     }
 }
