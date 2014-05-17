@@ -203,6 +203,11 @@ class Route
 
     // -- Accessor methods ------------------------------------------------------
 
+    public function getCallback()
+    {
+        return $this->callback;
+    }
+
     public function getPath()
     {
         return $this->path;

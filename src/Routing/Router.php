@@ -63,4 +63,9 @@ class Router
         // Return HTTP 404
         return new Response("Route not found", Response::HTTP_NOT_FOUND);
     }
+
+    public function getRoutes()
+    {
+        return $this->routes;
+    }
 }
