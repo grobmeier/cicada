@@ -227,10 +227,22 @@ class Route
         return $this->method;
     }
 
+    public function getBefore()
+    {
+        return $this->before;
+    }
+
+
+    public function getAfter()
+    {
+        return $this->after;
+    }
+
     // -- Private methods ------------------------------------------------------
 
     private function processPath($path, $asserts)
     {
+        // Replace placeholders in curly braces with named regex groups
         $callback = function($matches) use ($asserts) {
             $name = $matches[1];
             $pattern = isset($asserts[$name]) ? $asserts[$name] : ".+";
