@@ -75,7 +75,7 @@ class ExceptionHandler
      */
     public function handle(\Exception $ex)
     {
-        foreach($this->callbacks as $exClass => $callback) {
+        foreach ($this->callbacks as $exClass => $callback) {
             if ($ex instanceof $exClass) {
                 return $callback($ex);
             }

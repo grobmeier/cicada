@@ -69,8 +69,7 @@ class Route
         $method = null,
         $before = [],
         $after = []
-    )
-    {
+    ) {
         $this->path = $path;
         $this->callback = $callback;
         $this->method = $method;
@@ -239,7 +238,7 @@ class Route
     private function processPath($path, $asserts)
     {
         // Replace placeholders in curly braces with named regex groups
-        $callback = function($matches) use ($asserts) {
+        $callback = function ($matches) use ($asserts) {
             $name = $matches[1];
             $pattern = isset($asserts[$name]) ? $asserts[$name] : ".+";
 
@@ -255,7 +254,7 @@ class Route
         $pattern = preg_replace('/\/+/', '/', $pattern);
 
         // Escape slashes, used as delimiter in regex
-        $pattern = str_replace('/','\\/', $pattern);
+        $pattern = str_replace('/', '\\/', $pattern);
 
         // Add start and and delimiters
         return "/^$pattern$/";

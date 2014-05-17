@@ -37,12 +37,12 @@ class Application extends \Pimple
             return new Session();
         };
 
-        $this['collection_factory'] = $this->factory(function() {
+        $this['collection_factory'] = $this->factory(function () {
             $route = new Route('/');
             return new RouteCollection($route);
         });
 
-        $this['exception_handler'] = function() {
+        $this['exception_handler'] = function () {
             return new ExceptionHandler();
         };
     }
