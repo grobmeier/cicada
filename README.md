@@ -3,6 +3,8 @@ Cicada
 
 A micro framework for creating traditional or REST-like web applications.
 
+[![Latest Stable Version](https://poser.pugx.org/cicada/cicada/v/stable.png)](https://packagist.org/packages/cicada/cicada) [![Total Downloads](https://poser.pugx.org/cicada/cicada/downloads.png)](https://packagist.org/packages/cicada/cicada) [![Build Status](https://travis-ci.org/cicada/cicada.png)](https://travis-ci.org/cicada/cicada) [![License](https://poser.pugx.org/cicada/cicada/license.png)](https://packagist.org/packages/cicada/cicada)
+
 Installation
 ------------
 
