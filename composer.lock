@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "a29c3b535a1f1a389298835e9b8b5789",
+    "hash": "a4a663e53dd173de859cb474d45dc3a5",
     "packages": [
         {
             "name": "apache/log4php",
