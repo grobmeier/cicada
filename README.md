@@ -1,7 +1,7 @@
 Cicada
 ======
 
-A micro framework for
+A micro framework for creating traditional or REST-like web applications.
 
 Installation
 ------------
