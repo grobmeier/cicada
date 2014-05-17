@@ -15,8 +15,14 @@
  *  language governing permissions and limitations under the License.
  */
 
+namespace Cicada;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
- * TODO: Finish the work
+ * Abastract implementation of a controller which can processes a Request and
+ * provide a response.
  */
 abstract class AbstractAction
 {
@@ -47,12 +53,22 @@ abstract class AbstractAction
         $this->doExecute($app, $request);
     }
 
-    protected function validate(Application $app, Request $request)
+    /**
+     * Validates request fields.
+     */
+    protected function validate(Request $request)
     {
 
     }
 
-    protected abstract function doExecute(Application $app, Request $request);
+    /**
+     * Does the actual work.
+     *
+     * @param  Application $app     Application object.
+     * @param  Request     $request Request to process.
+     * @return Response The resulting response.
+     */
+    abstract protected function doExecute(Application $app, Request $request);
 
     private function checkFields(Request $request)
     {
