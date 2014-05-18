@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class InvokerTest extends \PHPUnit_Framework_TestCase
 {
-    private $argsByName = [
+    private $namedParams = [
         'a' => 'a_val',
         'b' => 'b_val',
         'foo' => 'foo_val',
@@ -36,21 +36,31 @@ class InvokerTest extends \PHPUnit_Framework_TestCase
     {
         $app = new Application();
         $request = new Request();
-        $argsByClass = [$app, $request];
+        $classParams = [$app, $request];
 
-        $function1 = function($foo, $bar) { return func_get_args(); };
-        $function2 = function($foo, $bar, Request $request) { return func_get_args(); };
-        $function3 = function(Application $app, Request $request, $foo, $bar) { return func_get_args(); };
-        $function4 = function(Application $bla, Request $tra, $foo, $bar) { return func_get_args(); };
-        $function5 = function(Application $bla, Request $tra, $foo, $bar, $nonexistant) { return func_get_args(); };
+        $function1 = function ($foo, $bar) {
+            return func_get_args();
+        };
+        $function2 = function ($foo, $bar, Request $request) {
+            return func_get_args();
+        };
+        $function3 = function (Application $app, Request $request, $foo, $bar) {
+            return func_get_args();
+        };
+        $function4 = function (Application $bla, Request $tra, $foo, $bar) {
+            return func_get_args();
+        };
+        $function5 = function (Application $bla, Request $tra, $foo, $bar, $nonexistant) {
+            return func_get_args();
+        };
 
         $invoker = new Invoker();
 
-        $actual1 = $invoker->invoke($function1, $this->argsByName, $argsByClass);
-        $actual2 = $invoker->invoke($function2, $this->argsByName, $argsByClass);
-        $actual3 = $invoker->invoke($function3, $this->argsByName, $argsByClass);
-        $actual4 = $invoker->invoke($function4, $this->argsByName, $argsByClass);
-        $actual5 = $invoker->invoke($function5, $this->argsByName, $argsByClass);
+        $actual1 = $invoker->invoke($function1, $this->namedParams, $classParams);
+        $actual2 = $invoker->invoke($function2, $this->namedParams, $classParams);
+        $actual3 = $invoker->invoke($function3, $this->namedParams, $classParams);
+        $actual4 = $invoker->invoke($function4, $this->namedParams, $classParams);
+        $actual5 = $invoker->invoke($function5, $this->namedParams, $classParams);
 
         $expected1 = ['foo_val', 'bar_val'];
         $expected2 = ['foo_val', 'bar_val', $request];
@@ -69,14 +79,14 @@ class InvokerTest extends \PHPUnit_Framework_TestCase
     {
         $app = new Application();
         $request = new Request();
-        $argsByClass = [$app, $request];
+        $classParams = [$app, $request];
 
         $invoker = new Invoker();
-        $actual1 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute1", $this->argsByName, $argsByClass);
-        $actual2 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute2", $this->argsByName, $argsByClass);
-        $actual3 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute3", $this->argsByName, $argsByClass);
-        $actual4 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute4", $this->argsByName, $argsByClass);
-        $actual5 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute5", $this->argsByName, $argsByClass);
+        $actual1 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute1", $this->namedParams, $classParams);
+        $actual2 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute2", $this->namedParams, $classParams);
+        $actual3 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute3", $this->namedParams, $classParams);
+        $actual4 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute4", $this->namedParams, $classParams);
+        $actual5 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute5", $this->namedParams, $classParams);
 
         $expected1 = ['foo_val', 'bar_val'];
         $expected2 = ['foo_val', 'bar_val', $request];
@@ -119,5 +129,32 @@ class InvokerTest extends \PHPUnit_Framework_TestCase
     {
         $invoker = new Invoker();
         $invoker->invoke("Cicada\\Tests\\InvokerTest::foo");
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage $classParams entries must be objects.
+     */
+    public function testNonObjectClassParam()
+    {
+        $function = function () {
+        };
+
+        $invoker = new Invoker();
+        $invoker->invoke($function, [], ['not_an_object']);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage $classParams contains multiple objects of the
+     *     same class [Symfony\Component\HttpFoundation\Request].
+     */
+    public function testMultipleClassParamOfSameClass()
+    {
+        $function = function () {
+        };
+
+        $invoker = new Invoker();
+        $invoker->invoke($function, [], [new Request(), new Request()]);
     }
 }
