@@ -72,9 +72,12 @@ class Route
     ) {
         $this->path = $path;
         $this->callback = $callback;
-        $this->method = $method;
         $this->before = $before;
         $this->after = $after;
+
+        if (isset($method)) {
+            $this->method($method);
+        }
     }
 
     /**
@@ -102,33 +105,20 @@ class Route
     /**
      * Processes the Request and returns a Response.
      *
-     * @param $app
-     * @param $request
-     * @param $arguments
-     *
-     * @return Response
+     * @throws UnexpectedValueException If the route callback returns a value
+     *         which is not a string or Response object.
      */
-    public function run(Application $app, Request $request, array $arguments)
+    public function run(Application $app, Request $request, array $arguments = [])
     {
-        // Call before
-        foreach ($this->before as $before) {
-            $result = $before($app, $request);
-            if (isset($result)) {
-                return $result;
-            }
-        }
-
-        $invoker = new Invoker();
-        $response = $invoker->invoke($this->callback, $arguments, [$app, $request]);
+        $response = $this->processRequest($app, $request, $arguments);
 
         // If callback returns a string, use it to construct a Response
         if (is_string($response)) {
             $response = new Response($response, Response::HTTP_OK, ['Content-Type' => 'text/html']);
         }
 
-        // Call after
-        foreach ($this->after as $after) {
-            $after($app, $request, $response);
+        if (!($response instanceof Response)) {
+            throw new  \UnexpectedValueException("Route did not return a string or Response object.");
         }
 
         return $response;
@@ -233,7 +223,56 @@ class Route
         return $this->after;
     }
 
+    public function getPrefix()
+    {
+        return $this->prefix;
+    }
+
+    public function getAsserts()
+    {
+        return $this->asserts;
+    }
+
     // -- Private methods ------------------------------------------------------
+
+    private function processRequest($app, $request, $arguments)
+    {
+        // Callbacks to execute before the route
+        $response = $this->invokeBefore($app, $request, $arguments);
+
+        // If they return a response, it stops route execution
+        if (isset($response)) {
+            return $response;
+        }
+
+        // Invoke the route callback
+        $invoker = new Invoker();
+        $response = $invoker->invoke($this->callback, $arguments, [$app, $request]);
+
+        // Callbacks to execute after the route
+        $this->invokeAfter($app, $request, $arguments);
+
+        return $response;
+    }
+
+    private function invokeBefore($app, $request, $arguments)
+    {
+        $invoker = new Invoker();
+        foreach ($this->before as $function) {
+            $response = $invoker->invoke($function, $arguments, [$app, $request]);
+            if ($response !== null) {
+                return $response;
+            }
+        }
+    }
+
+    private function invokeAfter($app, $request, $arguments)
+    {
+        $invoker = new Invoker();
+        foreach ($this->after as $function) {
+            $invoker->invoke($function, $arguments, [$app, $request]);
+        }
+    }
 
     private function processPath($path, $asserts)
     {

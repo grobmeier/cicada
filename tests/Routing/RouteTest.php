@@ -18,9 +18,14 @@
 namespace Cicada\Tests;
 
 use Cicada\Routing\Route;
+use Cicada\Application;
+
+use Symfony\Component\HttpFoundation\Request;
 
 class RouteTest extends \PHPUnit_Framework_TestCase
 {
+    public $indicator;
+
     public function testAccessors()
     {
         $path = '/foo/bar';
@@ -59,5 +64,237 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         $expected = ['x' => 1, 'y' => 2];
         $actual = $route->matches('/foo/1/bar/2/baz');
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testBeforeAfter()
+    {
+        $this->indicator = [];
+
+        $b1 = function (Application $app, $x) {
+            $this->indicator[] = 'b1';
+            $this->indicator[] = func_get_args();
+        };
+
+        $b2 = function (Request $req) {
+            $this->indicator[] = 'b2';
+            $this->indicator[] = func_get_args();
+        };
+
+        $b3 = function ($y, $x) {
+            $this->indicator[] = 'b3';
+            $this->indicator[] = func_get_args();
+        };
+
+        $a1 = function (Application $app, $x) {
+            $this->indicator[] = 'a1';
+            $this->indicator[] = func_get_args();
+        };
+
+        $a2 = function (Request $req) {
+            $this->indicator[] = 'a2';
+            $this->indicator[] = func_get_args();
+        };
+
+        $a3 = function ($y, $x) {
+            $this->indicator[] = 'a3';
+            $this->indicator[] = func_get_args();
+        };
+
+        $before = [$b1, $b2, $b3];
+        $after = [$a1, $a2, $a3];
+
+        $callback = function () {
+            $this->indicator[] = 'callback';
+            return "Foo";
+        };
+
+        $app = new Application();
+        $request = new Request();
+        $params = ['x' => 'x_val'];
+
+        $route = new Route('/', $callback, "GET", $before, $after);
+        $response = $route->run($app, $request, $params);
+
+        $expected = [
+            'b1', [$app, 'x_val'],
+            'b2', [$request],
+            'b3', [null, 'x_val'],
+            'callback',
+            'a1', [$app, 'x_val'],
+            'a2', [$request],
+            'a3', [null, 'x_val'],
+        ];
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Foo", $response->getContent());
+    }
+
+    public function testBeforeReturnedValueStopsExection()
+    {
+        $this->indicator = [];
+
+        $b1 = function () {
+            $this->indicator[] = 'b1';
+        };
+
+        $b2 = function () {
+            $this->indicator[] = 'b2';
+            return "Stop! Hammertime.";
+        };
+
+        $b3 = function () {
+            $this->indicator[] = 'b3';
+        };
+
+        $before = [$b1, $b2, $b3];
+
+        $callback = function () {
+            $this->indicator[] = 'callback';
+            return "Foo";
+        };
+
+        $app = new Application();
+        $request = new Request();
+
+        $route = new Route('/', $callback, "GET", $before);
+        $response = $route->run($app, $request, []);
+
+        $expected = ['b1', 'b2'];
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Stop! Hammertime.", $response->getContent());
+    }
+
+    public function testAfterReturnedValueDoesNotStopExection()
+    {
+        $this->indicator = [];
+
+        $a1 = function (Application $app, $x) {
+            $this->indicator[] = 'a1';
+            $this->indicator[] = func_get_args();
+        };
+
+        $a2 = function (Request $req) {
+            $this->indicator[] = 'a2';
+            $this->indicator[] = func_get_args();
+            return "Shoud not stop anything";
+        };
+
+        $a3 = function ($y, $x) {
+            $this->indicator[] = 'a3';
+            $this->indicator[] = func_get_args();
+        };
+
+        $after = [$a1, $a2, $a3];
+
+        $callback = function () {
+            $this->indicator[] = 'callback';
+            return "Foo";
+        };
+
+        $app = new Application();
+        $request = new Request();
+        $params = ['x' => 'x_val'];
+
+        $route = new Route('/', $callback, "GET", [], $after);
+        $response = $route->run($app, $request, $params);
+
+        $expected = [
+            'callback',
+            'a1', [$app, 'x_val'],
+            'a2', [$request],
+            'a3', [null, 'x_val'],
+        ];
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Foo", $response->getContent());
+    }
+
+    /**
+     * @expectedException UnexpectedValueException
+     * @expectedExceptionMessage Route did not return a string or Response object.
+     */
+    public function testExceptionWhenRouteReturnsCrap()
+    {
+        $route = new Route('/', function () {
+            return []; // Invalid return value for a route
+        });
+
+        $app = new Application();
+        $request = new Request();
+        $route->run($app, $request);
+    }
+
+    public function testBuilderSetters()
+    {
+        $route = new Route();
+
+        // Path
+        $this->assertSame('/', $route->getPath());
+        $result = $route->path('/foo');
+        $this->assertSame('/foo', $route->getPath());
+        $this->assertSame($result, $route);
+
+        // Method
+        $this->assertNull($route->getMethod());
+        $result = $route->method('POST');
+        $this->assertSame('POST', $route->getMethod());
+        $this->assertSame($result, $route);
+
+        // Before
+        $b1 = function () {};
+        $b2 = function () {};
+
+        $this->assertEquals([], $route->getBefore());
+
+        $result = $route->before($b1);
+        $this->assertEquals([$b1], $route->getBefore());
+        $this->assertSame($result, $route);
+
+        $result = $route->before($b2);
+        $this->assertEquals([$b1, $b2], $route->getBefore());
+        $this->assertSame($result, $route);
+
+        // After
+        $a1 = function () {};
+        $a2 = function () {};
+
+        $this->assertEquals([], $route->getAfter());
+
+        $result = $route->after($a1);
+        $this->assertEquals([$a1], $route->getAfter());
+        $this->assertSame($result, $route);
+
+        $result = $route->after($a2);
+        $this->assertEquals([$a1, $a2], $route->getAfter());
+        $this->assertSame($result, $route);
+
+        // Callback
+        $callback = function () {};
+        $this->assertNull($route->getCallback());
+        $result = $route->callback($callback);
+        $this->assertSame($callback, $route->getCallback());
+        $this->assertSame($result, $route);
+
+        // Prefix
+        $prefix = '/foo';
+        $this->assertSame('', $route->getPrefix());
+        $result = $route->prefix($prefix);
+        $this->assertSame($prefix, $route->getPrefix());
+        $this->assertSame($result, $route);
+
+        // Assert
+        $this->assertEquals([], $route->getAsserts());
+
+        $result = $route->assert('foo', 'foopattern');
+        $this->assertSame(['foo' => 'foopattern'], $route->getAsserts());
+        $this->assertSame($result, $route);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Unknown HTTP method: XXX
+     */
+    public function testInvalidMethod()
+    {
+        $route = new Route();
+        $route->method('XXX');
     }
 }

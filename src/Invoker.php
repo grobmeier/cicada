@@ -21,66 +21,107 @@ class Invoker
     /**
      * Invokes a method or anonymous function and returns the result.
      *
+     * Parameter injection is done in two ways:
+     *
+     * 1. `$classParams` array may contain only objects. For each of the objects
+     * in the array, if the callable function has a parameter with a type hing
+     * to that class, it will be injected.
+     *
+     * For example, in the following case $req will be populated by the Request
+     * from `$classParams`:
+     *
+     * ```
+     * $classParams = [new Request];
+     * $callable = new function(Request $req) { };
+     * $invoker->invoke($callable, [], $classParams);
+     * ```
+     *
+     * 2. `$namedParams` may contain an associative array containing named
+     * parameters. If the callable function has a parameter of the same name as
+     * one of the given parameters, it's value will be injected.
+     *
+     * For example:
+     *
+     * ```
+     * $namedParams = [
+     *     'foo' => 1,
+     *     'bar' => 2
+     * ];
+     * $callable = new function($bar, $foo) { };
+     * $invoker->invoke($callable, $namedParams);
+     * ```
+     *
+     * In the above example $foo and $bar will be injected from the $namedParams.
+     * Note that the order of parameters in the callback function is not
+     * significant.
+     *
+     * If `$namedParams` or `$classParams` contain entries which are not matched
+     * to any parameter of the callback function, they will be ignored.
+     *
+     * If the callback function conatins any parameter which is not matched
+     * from `$namedParams` or `$classParams`, it will be set to NULL.
+     *
      * @param  string|callable $callable
-     * @param  array           $argsByName
-     * @param  array           $argsByClass
+     * @param  array $namedParams Parameters matched by name.
+     * @param  array $classParams Parameters matched by class type hint.
      *
-     * @return mixed
+     * @return mixed The return value of the given callback function.
      *
-     * @throws \Exception when the callable isn't callable
+     * @throws \InvalidArgumentException when the callable isn't callable
+     * @throws \InvalidArgumentException If `$classParams` contains non-objects.
+     * @throws \InvalidArgumentException If `$classParams` contains multiple
+     * objects of the same class.
      */
-    public function invoke($callable, array $argsByName = [], array $argsByClass = [])
+    public function invoke($callable, array $namedParams = [], array $classParams = [])
     {
-        $argsByClass = $this->reindexArgsByClass($argsByClass);
+        $classParams = $this->reindexclassParams($classParams);
 
         if (is_string($callable) && strpos($callable, '::') !== false) {
-            return $this->invokeClassCallable($callable, $argsByName, $argsByClass);
+            return $this->invokeClassCallable($callable, $namedParams, $classParams);
         }
 
         if (is_callable($callable)) {
-            return $this->invokeCallable($callable, $argsByName, $argsByClass);
+            return $this->invokeCallable($callable, $namedParams, $classParams);
         }
 
         throw new \InvalidArgumentException("Given argument is not callable.");
     }
 
-    /**
-     * Parses a string like "SomeClass::someMethod" and returns a corresponding
-     * callable array for method someMethod on a new instance of SomeClass.
-     */
-    private function invokeClassCallable($callable, $argsByName, $argsByClass)
+    /** Invokes given as string in the form of "SomeClass::someMethod". */
+    private function invokeClassCallable($callable, $namedParams, $classParams)
     {
         list($class, $method) = explode('::', $callable);
 
         if (!class_exists($class)) {
-            throw new \Exception("Class $class does not exist.");
+            throw new \InvalidArgumentException("Class $class does not exist.");
         }
 
         $object = new $class();
 
         if (!method_exists($object, $method)) {
-            throw new \Exception("Method $class::$method does not exist.");
+            throw new \InvalidArgumentException("Method $class::$method does not exist.");
         }
 
         $reflection = new \ReflectionMethod($class, $method);
         $params = $reflection->getParameters();
 
-        $invokeParams = $this->mapParameters($params, $argsByName, $argsByClass);
+        $invokeParams = $this->mapParameters($params, $namedParams, $classParams);
 
         return call_user_func_array([$object, $method], $invokeParams);
     }
 
-    private function invokeCallable($callable, $argsByName, $argsByClass)
+    /** Invokes an anonymous function. */
+    private function invokeCallable($callable, $namedParams, $classParams)
     {
         $reflection = new \ReflectionFunction($callable);
         $params = $reflection->getParameters();
 
-        $invokeParams = $this->mapParameters($params, $argsByName, $argsByClass);
+        $invokeParams = $this->mapParameters($params, $namedParams, $classParams);
 
         return call_user_func_array($callable, $invokeParams);
     }
 
-    private function mapParameters(array $params, $argsByName, $argsByClass)
+    private function mapParameters(array $params, $namedParams, $classParams)
     {
         // Array of params in order in which they should be passed to the function
         $invokeParams = [];
@@ -90,10 +131,10 @@ class Invoker
             $class = $param->getClass();
 
             // First try to match by class, then by name
-            if (isset($class) && isset($argsByClass[$class->name])) {
-                $invokeParams[] = $argsByClass[$class->name];
-            } elseif (isset($argsByName[$name])) {
-                $invokeParams[] = $argsByName[$name];
+            if (isset($class) && isset($classParams[$class->name])) {
+                $invokeParams[] = $classParams[$class->name];
+            } elseif (isset($namedParams[$name])) {
+                $invokeParams[] = $namedParams[$name];
             } else {
                 $invokeParams[] = null;
             }
@@ -102,12 +143,25 @@ class Invoker
         return $invokeParams;
     }
 
-    private function reindexArgsByClass($args)
+    /** Reindexes an array of objects by class name. */
+    private function reindexClassParams(array $classParams)
     {
         $reindexed = [];
-        foreach ($args as $arg) {
-            $class = get_class($arg);
-            $reindexed[$class] = $arg;
+
+        foreach ($classParams as $param) {
+            if (!is_object($param)) {
+                throw new \InvalidArgumentException("\$classParams entries must be objects.");
+            }
+
+            $class = get_class($param);
+
+            if (isset($reindexed[$class])) {
+                throw new \InvalidArgumentException(
+                    "\$classParams contains multiple objects of the same class [$class]."
+                );
+            }
+
+            $reindexed[$class] = $param;
         }
 
         return $reindexed;
