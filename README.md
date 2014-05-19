@@ -11,7 +11,7 @@ Installation
 Add Cicada as a requirement for your project via Composer:
 
 ```
-composer require "grobmeier/cicada=@stable"
+composer require "cicada/cicada=@stable"
 ```
 
 Usage
