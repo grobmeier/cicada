@@ -104,7 +104,7 @@ class Application extends \Pimple
 
         // If all else fails...
         if ($response === null) {
-            return new Response("Page failed to render.", Response::HTTP_INTERNAL_SERVER_ERROR);
+            $response = new Response("Page failed to render.", Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $response->send();
