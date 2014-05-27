@@ -55,38 +55,40 @@ class RouteCollection
 
     public function get($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_GET);
+        return $this->generic($path, $callback, Route::HTTP_GET);
     }
 
     public function post($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_POST);
+        return $this->generic($path, $callback, Route::HTTP_POST);
     }
 
     public function put($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_PUT);
+        return $this->generic($path, $callback, Route::HTTP_PUT);
     }
 
     public function delete($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_GET);
+        return $this->generic($path, $callback, Route::HTTP_GET);
     }
 
     public function head($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_GET);
+        return $this->generic($path, $callback, Route::HTTP_GET);
     }
 
     public function generic($path, $callback, $method)
     {
         $route = clone $this->baseRoute;
 
-        $route->method(Route::HTTP_GET)
-            ->path($path)
-            ->callback($callback);
+        $route->path($path)
+            ->callback($callback)
+            ->method($method);
 
         $this->routes[] = $route;
+
+        return $this;
     }
 
     public function getRoutes()
