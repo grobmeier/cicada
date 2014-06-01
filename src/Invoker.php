@@ -76,18 +76,33 @@ class Invoker
     {
         $classParams = $this->reindexclassParams($classParams);
 
-        if (is_string($callable) && strpos($callable, '::') !== false) {
-            return $this->invokeClassCallable($callable, $namedParams, $classParams);
+        if ($callable instanceof \Closure) {
+            return $this->invokeFunctionCallable($callable, $namedParams, $classParams);
         }
 
-        if (is_callable($callable)) {
-            return $this->invokeCallable($callable, $namedParams, $classParams);
+        if (is_string($callable)) {
+            if (strpos($callable, '::') !== false) {
+                return $this->invokeClassCallable($callable, $namedParams, $classParams);
+            } else {
+                return $this->invokeFunctionCallable($callable, $namedParams, $classParams);
+            }
         }
+
+        if (
+            is_array($callable) &&
+            count($callable) == 2 &&
+            is_object($callable[0]) &&
+            is_string($callable[1])
+        ) {
+            return $this->invokeObjectCallable($callable[0], $callable[1], $namedParams, $classParams);
+        }
+
+
 
         throw new \InvalidArgumentException("Given argument is not callable.");
     }
 
-    /** Invokes given as string in the form of "SomeClass::someMethod". */
+    /** Invokes callback given as string in the form of "SomeClass::someMethod". */
     private function invokeClassCallable($callable, $namedParams, $classParams)
     {
         list($class, $method) = explode('::', $callable);
@@ -98,11 +113,18 @@ class Invoker
 
         $object = new $class();
 
+        return $this->invokeObjectCallable($object, $method, $namedParams, $classParams);
+    }
+
+    /** Invokes a method on an object. */
+    private function invokeObjectCallable($object, $method, $namedParams, $classParams)
+    {
         if (!method_exists($object, $method)) {
+            $class = get_class($object);
             throw new \InvalidArgumentException("Method $class::$method does not exist.");
         }
 
-        $reflection = new \ReflectionMethod($class, $method);
+        $reflection = new \ReflectionMethod($object, $method);
         $params = $reflection->getParameters();
 
         $invokeParams = $this->mapParameters($params, $namedParams, $classParams);
@@ -111,7 +133,7 @@ class Invoker
     }
 
     /** Invokes an anonymous function. */
-    private function invokeCallable($callable, $namedParams, $classParams)
+    private function invokeFunctionCallable($callable, $namedParams, $classParams)
     {
         $reflection = new \ReflectionFunction($callable);
         $params = $reflection->getParameters();
