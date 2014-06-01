@@ -21,6 +21,7 @@ use Cicada\Routing\Route;
 use Cicada\Application;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class RouteTest extends \PHPUnit_Framework_TestCase
 {
@@ -115,6 +116,8 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         $route = new Route('/', $callback, "GET", $before, $after);
         $response = $route->run($app, $request, $params);
 
+        $this->assertInstanceOf(Response::class, $response);
+
         $expected = [
             'b1', [$app, 'x_val'],
             'b2', [$request],
@@ -158,6 +161,8 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         $route = new Route('/', $callback, "GET", $before);
         $response = $route->run($app, $request, []);
 
+        $this->assertInstanceOf(Response::class, $response);
+
         $expected = ['b1', 'b2'];
         $this->assertEquals($expected, $this->indicator);
         $this->assertEquals("Stop! Hammertime.", $response->getContent());
@@ -197,6 +202,8 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         $route = new Route('/', $callback, "GET", [], $after);
         $response = $route->run($app, $request, $params);
 
+        $this->assertInstanceOf(Response::class, $response);
+
         $expected = [
             'callback',
             'a1', [$app, 'x_val'],
@@ -209,7 +216,7 @@ class RouteTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException UnexpectedValueException
-     * @expectedExceptionMessage Route did not return a string or Response object.
+     * @expectedExceptionMessage The Response content must be a string or object implementing __toString(), "array" given.
      */
     public function testExceptionWhenRouteReturnsCrap()
     {

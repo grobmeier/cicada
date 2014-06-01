@@ -16,36 +16,30 @@
  */
 namespace Cicada;
 
-class Configuration
+/**
+ * A simple config class which wraps a configuration array.
+ */
+class Configuration implements \ArrayAccess
 {
-    private static $instance;
+    private $map = [];
 
-    private $map = array();
-
-    private function __construct()
+    public function offsetExists($offset)
     {
+        return isset($this->map[$offset]);
     }
 
-    public function add($key, $value)
+    public function offsetGet($offset)
     {
-        $this->map[$key] = $value;
+        return $this->map[$offset];
     }
 
-    public function get($key)
+    public function offsetSet ($offset, $value)
     {
-        if (isset($this->map[$key])) {
-            return $this->map[$key];
-        }
-
-        return null;
+        $this->map[$offset] = $value;
     }
 
-    public static function getInstance()
+    public function offsetUnset ($offset)
     {
-        if (self::$instance == null) {
-            self::$instance = new Configuration();
-        }
-
-        return self::$instance;
+        unset($this->map[$offset]);
     }
 }

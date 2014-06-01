@@ -25,6 +25,8 @@ use Symfony\Component\HttpFoundation\Session\Session;
 
 class Application extends \Pimple
 {
+    use RequestProcessorTrait;
+
     public function __construct()
     {
         parent::__construct();
@@ -49,30 +51,30 @@ class Application extends \Pimple
 
     public function get($pattern, $callback)
     {
-        return $this->route($pattern, $callback, Route::HTTP_GET);
+        return $this->query(Route::HTTP_GET, $pattern, $callback);
     }
 
     public function post($pattern, $callback)
     {
-        return $this->route($pattern, $callback, Route::HTTP_POST);
+        return $this->query(Route::HTTP_POST, $pattern, $callback);
     }
 
     public function put($pattern, $callback)
     {
-        return $this->route($pattern, $callback, Route::HTTP_PUT);
+        return $this->query(Route::HTTP_PUT, $pattern, $callback);
     }
 
     public function delete($pattern, $callback)
     {
-        return $this->route($pattern, $callback, Route::HTTP_DELETE);
+        return $this->query(Route::HTTP_DELETE, $pattern, $callback);
     }
 
     public function head($pattern, $callback)
     {
-        return $this->route($pattern, $callback, Route::HTTP_HEAD);
+        return $this->query(Route::HTTP_HEAD, $pattern, $callback);
     }
 
-    public function route($pattern, $callback, $method)
+    public function query($method, $pattern, $callback)
     {
         $route = new Route($pattern, $callback, $method);
         $this['router']->addRoute($route);
@@ -94,9 +96,11 @@ class Application extends \Pimple
     {
         $request = Request::createFromGlobals();
 
+        $callable = [$this['router'], 'route'];
+
         try {
             // Try to process the request
-            $response = $this['router']->route($this, $request);
+            $response = $this->processRequest($this, $request, $callable);
         } catch (\Exception $ex) {
             // On failure invoke the error handler
             $response = $this['exception_handler']->handle($ex);

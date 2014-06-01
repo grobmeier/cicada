@@ -24,9 +24,13 @@ use Cicada\Routing\Router;
 use Cicada\Routing\Route;
 
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
+    public $indicator;
+
     public function testRouterAccess()
     {
         $app = new Application();
@@ -116,5 +120,57 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($callback, $routes[2]->getCallback());
         $this->assertSame($callback, $routes[3]->getCallback());
         $this->assertSame($callback, $routes[4]->getCallback());
+    }
+
+    public function testBeforeAfter()
+    {
+        $this->indicator = [];
+
+        $b1 = function () {
+            $this->indicator[] = 'b1';
+        };
+
+        $b2 = function () {
+            $this->indicator[] = 'b2';
+        };
+
+        $a1 = function () {
+            $this->indicator[] = 'a1';
+        };
+
+        $a2 = function () {
+            $this->indicator[] = 'a2';
+        };
+
+        $callback = function () {
+            $this->indicator[] = 'callback';
+            return "Foo";
+        };
+
+        $app = new Application();
+        $app->get('/', $callback);
+
+        $app->before($b1);
+        $app->before($b2);
+
+        $app->after($a1);
+        $app->after($a2);
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        ob_start();
+        $app->run();
+        $result = ob_get_clean();
+
+        $expected = [
+            'b1',
+            'b2',
+            'callback',
+            'a1',
+            'a2',
+        ];
+
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Foo", $result);
     }
 }

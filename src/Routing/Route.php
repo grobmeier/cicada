@@ -17,6 +17,7 @@
 namespace Cicada\Routing;
 
 use Cicada\Application;
+use Cicada\RequestProcessorTrait;
 use Cicada\Invoker;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Route
 {
+    use RequestProcessorTrait;
+
     const HTTP_GET = 'GET';
     const HTTP_POST = 'POST';
     const HTTP_PUT = 'PUT';
@@ -56,12 +59,6 @@ class Route
 
     /** The prefix to put before the route. */
     private $prefix = '';
-
-    /** Array of callbacks to call before the request. */
-    private $before = [];
-
-    /** Array of callbacks to call after the request. */
-    private $after = [];
 
     public function __construct(
         $path = '/',
@@ -110,37 +107,10 @@ class Route
      */
     public function run(Application $app, Request $request, array $arguments = [])
     {
-        $response = $this->processRequest($app, $request, $arguments);
-
-        // If callback returns a string, use it to construct a Response
-        if (is_string($response)) {
-            $response = new Response($response, Response::HTTP_OK, ['Content-Type' => 'text/html']);
-        }
-
-        if (!($response instanceof Response)) {
-            throw new  \UnexpectedValueException("Route did not return a string or Response object.");
-        }
-
-        return $response;
+        return $this->processRequest($app, $request, $this->callback, $arguments);
     }
 
     // -- Builder methods ------------------------------------------------------
-
-    /** Adds a callback to execute before the request. */
-    public function before($callback)
-    {
-        $this->before[] = $callback;
-
-        return $this;
-    }
-
-    /** Adds a callback to execute after the request. */
-    public function after(callable $callback)
-    {
-        $this->after[] = $callback;
-
-        return $this;
-    }
 
     /** Sets the route's HTTP method. */
     public function method($method)
@@ -217,7 +187,6 @@ class Route
         return $this->before;
     }
 
-
     public function getAfter()
     {
         return $this->after;
@@ -234,45 +203,6 @@ class Route
     }
 
     // -- Private methods ------------------------------------------------------
-
-    private function processRequest($app, $request, $arguments)
-    {
-        // Callbacks to execute before the route
-        $response = $this->invokeBefore($app, $request, $arguments);
-
-        // If they return a response, it stops route execution
-        if (isset($response)) {
-            return $response;
-        }
-
-        // Invoke the route callback
-        $invoker = new Invoker();
-        $response = $invoker->invoke($this->callback, $arguments, [$app, $request]);
-
-        // Callbacks to execute after the route
-        $this->invokeAfter($app, $request, $arguments);
-
-        return $response;
-    }
-
-    private function invokeBefore($app, $request, $arguments)
-    {
-        $invoker = new Invoker();
-        foreach ($this->before as $function) {
-            $response = $invoker->invoke($function, $arguments, [$app, $request]);
-            if ($response !== null) {
-                return $response;
-            }
-        }
-    }
-
-    private function invokeAfter($app, $request, $arguments)
-    {
-        $invoker = new Invoker();
-        foreach ($this->after as $function) {
-            $invoker->invoke($function, $arguments, [$app, $request]);
-        }
-    }
 
     private function processPath($path, $asserts)
     {
