@@ -25,6 +25,8 @@ use Symfony\Component\HttpFoundation\Session\Session;
 
 class Application extends \Pimple
 {
+    use RequestProcessorTrait;
+
     public function __construct()
     {
         parent::__construct();
@@ -94,9 +96,11 @@ class Application extends \Pimple
     {
         $request = Request::createFromGlobals();
 
+        $callable = [$this['router'], 'route'];
+
         try {
             // Try to process the request
-            $response = $this['router']->route($this, $request);
+            $response = $this->processRequest($this, $request, $callable);
         } catch (\Exception $ex) {
             // On failure invoke the error handler
             $response = $this['exception_handler']->handle($ex);
