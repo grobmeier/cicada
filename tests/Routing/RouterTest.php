@@ -96,4 +96,53 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame("Page not found", $response->getContent());
         $this->assertSame(404, $response->getStatusCode());
     }
+
+    public function testNamedRoutes()
+    {
+        $router = new Router();
+
+        $r1 = (new Route())->name("r1");
+        $r2 = (new Route())->name("r2");
+        $r3 = (new Route())->name("r3");
+
+        $router->addRoute($r1);
+        $router->addRoute($r2);
+        $router->addRoute($r3);
+
+        $this->assertSame($router->getRoute('r1'), $r1);
+        $this->assertSame($router->getRoute('r2'), $r2);
+        $this->assertSame($router->getRoute('r3'), $r3);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Route "foo" not found.
+     */
+    public function testNamedRouteNotFound()
+    {
+        $router = new Router();
+        $router->getRoute("foo");
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Route name not provided.
+     */
+    public function testNamedRouteError()
+    {
+        $router = new Router();
+        $router->getRoute(null);
+    }
+
+    public function testGetRoutePath()
+    {
+        $router = new Router();
+        $route = (new Route("/foo/{bar}"))->name("route");
+        $router->addRoute($route);
+
+        $actual = $router->getRoutePath("route", ["bar" => 1]);
+        $expected = "/foo/1";
+
+        $this->assertSame($expected, $actual);
+    }
 }

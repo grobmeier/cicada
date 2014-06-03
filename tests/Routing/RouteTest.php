@@ -34,14 +34,30 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         $method = Route::HTTP_GET;
         $before = [function() {}];
         $after = [function() {}];
+        $name = "foo";
 
-        $route = new Route($path, $callback, $method, $before, $after);
+        $route = new Route($path, $callback, $method, $before, $after, $name);
 
         $this->assertSame($path, $route->getPath());
         $this->assertSame($callback, $route->getCallback());
         $this->assertSame($method, $route->getMethod());
         $this->assertSame($before, $route->getBefore());
         $this->assertSame($after, $route->getAfter());
+        $this->assertSame($name, $route->getName());
+    }
+
+    public function testNaming()
+    {
+        $name = "foo";
+
+        $route = new Route();
+
+        $this->assertNull($route->getName());
+
+        $return = $route->name($name);
+
+        $this->assertSame($name, $route->getName());
+        $this->assertSame($return, $route);
     }
 
     public function testMatching()
@@ -303,5 +319,45 @@ class RouteTest extends \PHPUnit_Framework_TestCase
     {
         $route = new Route();
         $route->method('XXX');
+    }
+
+    public function testGetRealPath()
+    {
+        $route = new Route("/hi/{foo}/ho/{bar}");
+        $route->assert('foo', '\\d+');
+        $route->assert('bar', '\\d+');
+
+        $actual = $route->getRealPath([
+            'foo' => '1',
+            'bar' => '2',
+        ]);
+        $expected = "/hi/1/ho/2";
+        $this->assertSame($expected, $actual);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Missing parameter "bar"
+     */
+    public function testGetRealPathMissingParam()
+    {
+        $route = new Route("/hi/{foo}/ho/{bar}");
+        $actual = $route->getRealPath([
+            'foo' => '1',
+        ]);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Route parameter "foo" must match pattern "\d+", given "foo".
+     */
+    public function testGetRealPathFailedAssert()
+    {
+        $route = new Route("/hi/{foo}");
+        $route->assert('foo', '\\d+');
+
+        $actual = $route->getRealPath([
+            'foo' => 'foo',
+        ]);
     }
 }
