@@ -21,6 +21,11 @@ use Cicada\Application;
 
 use Symfony\Component\HttpFoundation\Request;
 
+function invokerTestFunction(Application $app, Request $request, $foo, $bar)
+{
+    return func_get_args();
+}
+
 class InvokerTest extends \PHPUnit_Framework_TestCase
 {
     private $namedParams = [
@@ -127,6 +132,19 @@ class InvokerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected3, $actual3);
         $this->assertEquals($expected4, $actual4);
         $this->assertEquals($expected5, $actual5);
+    }
+
+    public function testInvokeFunction()
+    {
+        $app = new Application();
+        $request = new Request();
+        $classParams = [$app, $request];
+
+        $invoker = new Invoker();
+        $actual = $invoker->invoke("Cicada\\Tests\\invokerTestFunction", $this->namedParams, $classParams);
+        $expected = [$app, $request, 'foo_val', 'bar_val'];
+
+        $this->assertEquals($expected, $actual);
     }
 
     /**

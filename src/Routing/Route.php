@@ -60,17 +60,22 @@ class Route
     /** The prefix to put before the route. */
     private $prefix = '';
 
+    /** Route name, optional. */
+    private $name;
+
     public function __construct(
         $path = '/',
         $callback = null,
         $method = null,
         $before = [],
-        $after = []
+        $after = [],
+        $name = null
     ) {
         $this->path = $path;
         $this->callback = $callback;
         $this->before = $before;
         $this->after = $after;
+        $this->name = $name;
 
         if (isset($method)) {
             $this->method($method);
@@ -108,6 +113,55 @@ class Route
     public function run(Application $app, Request $request, array $arguments = [])
     {
         return $this->processRequest($app, $request, $this->callback, $arguments);
+    }
+
+    /**
+     * Returns the route's path, with {placeholders} substituted with values
+     * from $params.
+     *
+     * For example, if `$this->path = "/hello/{name}"`, and
+     * `$params = ["name" => "ivan"]`, this method will return `/hello/ivan`.
+     *
+     * @param  array $params Associative array holding parameters to substitute.
+     *
+     * @return string The route's path.
+     *
+     * @throws \Exception If any of the params is missing.
+     * @throws \Exception If any of the params does not pass assert validation.
+     */
+    public function getRealPath($params)
+    {
+        $route = $this->getName();
+        if (empty($route)) {
+            $route = $this->path;
+        }
+
+        $path = $this->path;
+
+        // Locate placeholders in curly braces
+        $count = preg_match_all('/{([^}]+)}/', $this->path, $matches);
+
+        foreach ($matches[1] as $name) {
+
+            // Parameter must be given
+            if (!isset($params[$name])) {
+                throw new \Exception("Missing parameter \"$name\" for route \"$route\".");
+            }
+
+            $value = $params[$name];
+
+            // If an assert exists, the parameter must match it
+            if (isset($this->asserts[$name])) {
+                $pattern = $this->asserts[$name];
+                if (!preg_match("/^" . $pattern . "$/", $value)) {
+                    throw new \Exception("Route parameter \"$name\" must match pattern \"$pattern\", given \"$value\".");
+                }
+            }
+
+            $path = str_replace('{' . $name . '}', $value, $path);
+        }
+
+        return $path;
     }
 
     // -- Builder methods ------------------------------------------------------
@@ -156,6 +210,14 @@ class Route
         return $this;
     }
 
+    /** Set the route name. */
+    public function name($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
     // -- Accessor methods ------------------------------------------------------
 
     public function getCallback()
@@ -200,6 +262,11 @@ class Route
     public function getAsserts()
     {
         return $this->asserts;
+    }
+
+    public function getName()
+    {
+        return $this->name;
     }
 
     // -- Private methods ------------------------------------------------------

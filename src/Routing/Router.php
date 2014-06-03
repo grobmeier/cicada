@@ -64,8 +64,49 @@ class Router
         return new Response("Page not found", Response::HTTP_NOT_FOUND);
     }
 
+    /**
+     * Returns the collection of routes.
+     * @return array
+     */
     public function getRoutes()
     {
         return $this->routes;
+    }
+
+    /**
+     * Returns a route by name.
+     *
+     * @param  string $name
+     * @return Route
+     * @throws  \Exception If no route with given name is found.
+     * @throws  \InvalidArgumentException If given name is empty.
+     */
+    public function getRoute($name)
+    {
+        if (empty($name)) {
+            throw new \InvalidArgumentException("Route name not provided.");
+        }
+
+        // TODO: This is not very efficient, maybe find a better way
+        foreach ($this->routes as $route) {
+            if ($route->getName() === $name) {
+                return $route;
+            }
+        }
+
+        throw new \Exception("Route \"$name\" not found.");
+    }
+
+    /**
+     * Returns a route path.
+     *
+     * @param  string $name   Name of the route.
+     * @param  array $params  Route parameters, which are substituted for
+     *                        {placeholders}.
+     * @return string
+     */
+    public function getRoutePath($name, $params = [])
+    {
+        return $this->getRoute($name)->getRealPath($params);
     }
 }
