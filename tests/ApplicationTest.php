@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2014 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-
 namespace Cicada\Tests;
 
 use Cicada\Application;
 use Cicada\ExceptionHandler;
+use Cicada\Routing\Route;
 use Cicada\Routing\RouteCollection;
 use Cicada\Routing\Router;
-use Cicada\Routing\Route;
-
 use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {

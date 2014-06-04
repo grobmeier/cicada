@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2014 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -77,47 +77,50 @@ class Invoker
         $classParams = $this->reindexclassParams($classParams);
 
         if ($callable instanceof \Closure) {
-            return $this->invokeFunctionCallable($callable, $namedParams, $classParams);
+            return $this->invokeFunction($callable, $namedParams, $classParams);
         }
 
         if (is_string($callable)) {
             if (strpos($callable, '::') !== false) {
-                return $this->invokeClassCallable($callable, $namedParams, $classParams);
+                list($class, $method) = explode('::', $callable);
+                return $this->invokeClassMethod($class, $method, $namedParams, $classParams);
             } else {
-                return $this->invokeFunctionCallable($callable, $namedParams, $classParams);
+                return $this->invokeFunction($callable, $namedParams, $classParams);
             }
         }
 
-        if (
-            is_array($callable) &&
-            count($callable) == 2 &&
-            is_object($callable[0]) &&
-            is_string($callable[1])
-        ) {
-            return $this->invokeObjectCallable($callable[0], $callable[1], $namedParams, $classParams);
+        if (is_array($callable) && count($callable) == 2 && is_string($callable[1])) {
+            if (is_object($callable[0])) {
+                return $this->invokeObjectMethod($callable[0], $callable[1], $namedParams, $classParams);
+            }
+
+            if (is_string($callable[0])) {
+                return $this->invokeClassMethod($callable[0], $callable[1], $namedParams, $classParams);
+            }
         }
-
-
 
         throw new \InvalidArgumentException("Given argument is not callable.");
     }
 
-    /** Invokes callback given as string in the form of "SomeClass::someMethod". */
-    private function invokeClassCallable($callable, $namedParams, $classParams)
+    /**
+     * Invokes a method on a class, by creating an instance of the class and
+     * then invoking the method.
+     */
+    private function invokeClassMethod($class, $method, $namedParams, $classParams)
     {
-        list($class, $method) = explode('::', $callable);
-
         if (!class_exists($class)) {
             throw new \InvalidArgumentException("Class $class does not exist.");
         }
 
         $object = new $class();
 
-        return $this->invokeObjectCallable($object, $method, $namedParams, $classParams);
+        return $this->invokeObjectMethod($object, $method, $namedParams, $classParams);
     }
 
-    /** Invokes a method on an object. */
-    private function invokeObjectCallable($object, $method, $namedParams, $classParams)
+    /**
+     * Invokes a method on an object.
+     */
+    private function invokeObjectMethod($object, $method, $namedParams, $classParams)
     {
         if (!method_exists($object, $method)) {
             $class = get_class($object);
@@ -133,14 +136,14 @@ class Invoker
     }
 
     /** Invokes an anonymous function. */
-    private function invokeFunctionCallable($callable, $namedParams, $classParams)
+    private function invokeFunction($function, $namedParams, $classParams)
     {
-        $reflection = new \ReflectionFunction($callable);
+        $reflection = new \ReflectionFunction($function);
         $params = $reflection->getParameters();
 
         $invokeParams = $this->mapParameters($params, $namedParams, $classParams);
 
-        return call_user_func_array($callable, $invokeParams);
+        return call_user_func_array($function, $invokeParams);
     }
 
     private function mapParameters(array $params, $namedParams, $classParams)

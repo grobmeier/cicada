@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2014 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -92,6 +92,32 @@ class InvokerTest extends \PHPUnit_Framework_TestCase
         $actual3 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute3", $this->namedParams, $classParams);
         $actual4 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute4", $this->namedParams, $classParams);
         $actual5 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute5", $this->namedParams, $classParams);
+
+        $expected1 = ['foo_val', 'bar_val'];
+        $expected2 = ['foo_val', 'bar_val', $request];
+        $expected3 = [$app, $request, 'foo_val', 'bar_val'];
+        $expected4 = [$app, $request, 'foo_val', 'bar_val'];
+        $expected5 = [$app, $request, 'foo_val', 'bar_val', null];
+
+        $this->assertEquals($expected1, $actual1);
+        $this->assertEquals($expected2, $actual2);
+        $this->assertEquals($expected3, $actual3);
+        $this->assertEquals($expected4, $actual4);
+        $this->assertEquals($expected5, $actual5);
+    }
+
+    public function testInvokeClassMethod2()
+    {
+        $app = new Application();
+        $request = new Request();
+        $classParams = [$app, $request];
+
+        $invoker = new Invoker();
+        $actual1 = $invoker->invoke([InvokerTestAction::class, "execute1"], $this->namedParams, $classParams);
+        $actual2 = $invoker->invoke([InvokerTestAction::class, "execute2"], $this->namedParams, $classParams);
+        $actual3 = $invoker->invoke([InvokerTestAction::class, "execute3"], $this->namedParams, $classParams);
+        $actual4 = $invoker->invoke([InvokerTestAction::class, "execute4"], $this->namedParams, $classParams);
+        $actual5 = $invoker->invoke([InvokerTestAction::class, "execute5"], $this->namedParams, $classParams);
 
         $expected1 = ['foo_val', 'bar_val'];
         $expected2 = ['foo_val', 'bar_val', $request];

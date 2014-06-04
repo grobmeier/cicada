@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2014 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,14 +14,10 @@
  *  either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
-
 namespace Cicada\Tests;
 
 use Cicada\Routing\Route;
 use Cicada\Routing\RouteCollection;
-use Cicada\Application;
-
-use Symfony\Component\HttpFoundation\Request;
 
 class RouteCollectionTest extends \PHPUnit_Framework_TestCase
 {
