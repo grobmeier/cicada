@@ -1,6 +1,13 @@
 Cicada changelog
 ================
 
+0.4.6 (2014-06-04)
+------------------
+
+Features:
+
+* Routes now accept [$class, $method] style callbacks
+
 0.4.5 (2014-06-03)
 ------------------
 
