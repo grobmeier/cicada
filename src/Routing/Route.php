@@ -161,7 +161,7 @@ class Route
             $path = str_replace('{' . $name . '}', $value, $path);
         }
 
-        return $path;
+        return $this->prefix . $path;
     }
 
     // -- Builder methods ------------------------------------------------------

@@ -334,6 +334,21 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
+    public function testGetRealPathWithPrefix()
+    {
+        $route = new Route("/hi/{foo}/ho/{bar}");
+        $route->prefix('/prefix')
+            ->assert('foo', '\\d+')
+            ->assert('bar', '\\d+');
+
+        $actual = $route->getRealPath([
+            'foo' => '1',
+            'bar' => '2',
+        ]);
+        $expected = "/prefix/hi/1/ho/2";
+        $this->assertSame($expected, $actual);
+    }
+
     /**
      * @expectedException Exception
      * @expectedExceptionMessage Missing parameter "bar"
