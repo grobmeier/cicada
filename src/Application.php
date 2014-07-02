@@ -82,7 +82,7 @@ class Application extends \Pimple
         return $route;
     }
 
-    public function register(RouteCollection $collection)
+    public function addRouteCollection(RouteCollection $collection)
     {
         $this['router']->addRouteCollection($collection);
     }
