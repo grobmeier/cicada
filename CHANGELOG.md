@@ -1,6 +1,13 @@
 Cicada changelog
 ================
 
+0.4.8 (2014-08-25)
+------------------
+
+Bugfixes:
+
+* Fixed invalid access to Pimple container (v.3 removed the \Pimple alias)
+
 0.4.7 (2014-08-25)
 ------------------
 
