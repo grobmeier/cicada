@@ -42,7 +42,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($routes, $router->getRoutes());
 
-        // Create a Routecollection, add some Routes
+        // Create a RouteCollection, add some Routes
         $col = new RouteCollection(new Route());
 
         $col->get('/x', function() {});
@@ -114,7 +114,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Exception
+     * @expectedException \Exception
      * @expectedExceptionMessage Route "foo" not found.
      */
     public function testNamedRouteNotFound()
@@ -124,7 +124,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Exception
+     * @expectedException \Exception
      * @expectedExceptionMessage Route name not provided.
      */
     public function testNamedRouteError()

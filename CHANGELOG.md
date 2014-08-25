@@ -1,6 +1,18 @@
 Cicada changelog
 ================
 
+0.4.7 (2014-08-25)
+------------------
+
+Bugfixes:
+
+* BREAKING CHANGE: The Pimple dependency changed a signature to code, which caused a conflict with
+  Application:register. The register method was renamed to addRouteCollection.
+
+Misc:
+
+* Updated Pimple to 3.0
+
 0.4.6 (2014-06-04)
 ------------------
 
