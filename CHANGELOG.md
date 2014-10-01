@@ -1,6 +1,14 @@
 Cicada changelog
 ================
 
+TBD
+---
+
+Features:
+
+* Route can now accept OPTIONS requests
+
+
 0.4.8 (2014-08-25)
 ------------------
 
