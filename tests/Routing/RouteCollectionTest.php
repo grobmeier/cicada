@@ -36,6 +36,7 @@ class RouteCollectionTest extends \PHPUnit_Framework_TestCase
         $returns[] = $collection->put($path, $callback);
         $returns[] = $collection->delete($path, $callback);
         $returns[] = $collection->head($path, $callback);
+        $returns[] = $collection->options($path, $callback);
 
         foreach ($returns as $return) {
             $this->assertInstanceOf(Route::class, $return);
@@ -46,6 +47,7 @@ class RouteCollectionTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(Route::HTTP_PUT, $returns[2]->getMethod());
         $this->assertSame(Route::HTTP_DELETE, $returns[3]->getMethod());
         $this->assertSame(Route::HTTP_HEAD, $returns[4]->getMethod());
+        $this->assertSame(Route::HTTP_OPTIONS, $returns[5]->getMethod());
 
         $routes = $collection->getRoutes();
         foreach ($routes as $route) {

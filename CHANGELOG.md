@@ -1,6 +1,17 @@
 Cicada changelog
 ================
 
+0.4.9 (2014-10-15)
+------------------
+
+Features:
+
+* Route can now accept OPTIONS requests
+* Added an event emitter `$app['emitter']`
+* Added two new events:
+    * `router.match`, when a route is matched by a request
+    * `router.nomatch`, when none of the routes are matched by a request
+
 0.4.8 (2014-08-25)
 ------------------
 

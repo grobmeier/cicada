@@ -78,6 +78,11 @@ class RouteCollection
         return $this->query(Route::HTTP_HEAD, $path, $callback);
     }
 
+    public function options($path, $callback)
+    {
+        return $this->query(Route::HTTP_OPTIONS, $path, $callback);
+    }
+
     public function query($method, $path, $callback)
     {
         $route = clone $this->baseRoute;
