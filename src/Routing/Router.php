@@ -23,6 +23,25 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Router
 {
+    /**
+     * Event emitted when a route is matched.
+     *
+     * Arguments:
+     * - Application $app - the application object
+     * - Request $request - the request which matched
+     * - Route $route     - the route which was matched
+     */
+    const EVENT_MATCH = 'router.match';
+
+    /**
+     * Emitted when none of the routes were matched by a request.
+     *
+     * Arguments:
+     * - Application $app - the application object
+     * - Request $request - the request which did not match
+     */
+    const EVENT_NO_MATCH = 'router.nomatch';
+
     private $routes = [];
 
     public function addRoute(Route $route)
@@ -52,13 +71,25 @@ class Router
 
         /** @var $route Route */
         foreach ($this->routes as $route) {
+
+            // Match by method
             if ($route->getMethod() == $method) {
+
+                // Match by URL
                 $matches = $route->matches($url);
                 if ($matches !== false) {
+
+                    // Emit match event
+                    $app['emitter']->emit(self::EVENT_MATCH, [$app, $request, $route]);
+
+                    // Execute the route
                     return $route->run($app, $request, $matches);
                 }
             }
         }
+
+        // Emit no_match event
+        $app['emitter']->emit(self::EVENT_NO_MATCH, [$app, $request]);
 
         // Return HTTP 404
         return new Response("Page not found", Response::HTTP_NOT_FOUND);

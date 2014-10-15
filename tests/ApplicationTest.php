@@ -21,7 +21,11 @@ use Cicada\ExceptionHandler;
 use Cicada\Routing\Route;
 use Cicada\Routing\RouteCollection;
 use Cicada\Routing\Router;
+
+use Evenement\EventEmitter;
+
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Request;
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
@@ -168,5 +172,52 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($expected, $this->indicator);
         $this->assertEquals("Foo", $result);
+    }
+
+    public function testEmitter()
+    {
+        $app = new Application();
+
+        $this->assertInstanceOf(EventEmitter::class, $app['emitter']);
+    }
+
+    public function testEmitterMatchEvent()
+    {
+        $app = new Application();
+
+        // Create a route and a request which matches that route
+        $app->get('/', function() {});
+        $request = Request::create('http://www.google.com/');
+
+        $app['emitter']->on(Router::EVENT_MATCH, function(Application $app, Request $req, Route $route) {
+            $this->indicator = 1;
+        });
+
+        $this->indicator = 0;
+
+        $routerCallback = [$app['router'], 'route'];
+        $app->processRequest($app, $request, $routerCallback);
+
+        $this->assertSame(1, $this->indicator);
+    }
+
+    public function testEmitterNoMatchEvent()
+    {
+        $app = new Application();
+
+        // Create a route and a request which does NOT match that route
+        $app->get('/foo/', function() {});
+        $request = Request::create('http://www.google.com/');
+
+        $app['emitter']->on(Router::EVENT_NO_MATCH, function(Application $app, Request $req) {
+            $this->indicator = 1;
+        });
+
+        $this->indicator = 0;
+
+        $routerCallback = [$app['router'], 'route'];
+        $app->processRequest($app, $request, $routerCallback);
+
+        $this->assertSame(1, $this->indicator);
     }
 }

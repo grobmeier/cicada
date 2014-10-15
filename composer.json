@@ -24,6 +24,7 @@
     "require": {
         "php": ">=5.4.0",
         "apache/log4php": "2.3.0",
+        "evenement/evenement": "2.0.*",
         "symfony/http-foundation": "2.4.*",
         "pimple/pimple": "~3.0"
     },

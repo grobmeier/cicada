@@ -19,6 +19,8 @@ namespace Cicada;
 use Cicada\Routing\Route;
 use Cicada\Routing\RouteCollection;
 
+use Evenement\EventEmitter;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -46,6 +48,10 @@ class Application extends \Pimple\Container
 
         $this['exception_handler'] = function () {
             return new ExceptionHandler();
+        };
+
+        $this['emitter'] = function () {
+            return new EventEmitter();
         };
     }
 
