@@ -29,7 +29,7 @@ class Application extends \Pimple\Container
 {
     use RequestProcessorTrait;
 
-    public function __construct()
+    public function __construct(array $values = array())
     {
         parent::__construct();
 
@@ -53,6 +53,10 @@ class Application extends \Pimple\Container
         $this['emitter'] = function () {
             return new EventEmitter();
         };
+
+        foreach ($values as $key => $value) {
+            $this[$key] = $value;
+        }
     }
 
     public function get($pattern, $callback)
