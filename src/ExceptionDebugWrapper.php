@@ -163,6 +163,7 @@ EOF;
 EOF;
         }
 
+        $previous = '';
         if ($this->getPrevious() !== null) {
             $previous = $this->getPrevious()->toHTMLException();
         }
