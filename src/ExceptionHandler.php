@@ -16,9 +16,17 @@
  */
 namespace Cicada;
 
+use Symfony\Component\HttpFoundation\Response;
+
 class ExceptionHandler
 {
+    private $debug = false;
     private $callbacks = [];
+
+    public function __construct($debug = false)
+    {
+        $this->debug = $debug;
+    }
 
     /**
      * Adds an exception callback.
@@ -75,11 +83,22 @@ class ExceptionHandler
      */
     public function handle(\Exception $ex)
     {
+        if ($this->debug) {
+            return $this->handleDebug($ex);
+        }
+
         foreach ($this->callbacks as $exClass => $callback) {
             if ($ex instanceof $exClass) {
                 return $callback($ex);
             }
         }
+    }
+
+    public function handleDebug(\Exception $ex)
+    {
+        $wrapped = new ExceptionDebugWrapper($ex);
+
+        return new Response($wrapped->toHTML(), $wrapped->getStatusCode());
     }
 
     /** Returns the handlers array */

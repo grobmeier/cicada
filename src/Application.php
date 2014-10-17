@@ -29,9 +29,11 @@ class Application extends \Pimple\Container
 {
     use RequestProcessorTrait;
 
-    public function __construct()
+    public function __construct(array $values = array())
     {
         parent::__construct();
+
+        $this['debug'] = false;
 
         $this['router'] = function () {
             return new Routing\Router();
@@ -46,13 +48,17 @@ class Application extends \Pimple\Container
             return new RouteCollection($route);
         });
 
-        $this['exception_handler'] = function () {
-            return new ExceptionHandler();
+        $this['exception_handler'] = function ($app) {
+            return new ExceptionHandler($app['debug']);
         };
 
         $this['emitter'] = function () {
             return new EventEmitter();
         };
+
+        foreach ($values as $key => $value) {
+            $this[$key] = $value;
+        }
     }
 
     public function get($pattern, $callback)
