@@ -31,7 +31,7 @@ $app = new Application();
 
 // Add a route
 $app->get('/hello/{name}', function (Application $app, Request $request, $name) {
-    return Response("Hello $name");
+    return new Response("Hello $name");
 });
 
 $app->run();
