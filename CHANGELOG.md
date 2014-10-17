@@ -1,6 +1,14 @@
 Cicada changelog
 ================
 
+Next release
+------------
+
+Features:
+
+* Application accepts an array of configuration values in the constructor
+* New `debug` parameter, when true all exception will be catched and a nice formatted page will be shown
+
 0.4.9 (2014-10-15)
 ------------------
 
