@@ -87,4 +87,17 @@ class ExceptionHandlerTest extends \PHPUnit_Framework_TestCase
         $actual = $handler->handle(new \BadMethodCallException());
         $this->assertNull($actual);
     }
+
+    public function testDebug()
+    {
+        $handler = new ExceptionHandler(true);
+        $handler->add(function(\Exception $ex) { return 1; });
+
+        $actual = $handler->handle(new \Exception('Help', 123));
+
+        $this->assertNotEquals($actual, 1);
+        $this->assertInstanceOf('\Symfony\Component\HttpFoundation\Response', $actual);
+        $this->assertRegExp('/Help/', $actual->getContent());
+        $this->assertEquals(500, $actual->getStatusCode());
+    }
 }
