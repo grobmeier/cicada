@@ -18,7 +18,13 @@ namespace Cicada;
 
 class ExceptionHandler
 {
+    private $debug = false;
     private $callbacks = [];
+
+    public function __construct($debug = false)
+    {
+        $this->debug = $debug;
+    }
 
     /**
      * Adds an exception callback.
