@@ -1,6 +1,15 @@
 Cicada changelog
 ================
 
+0.4.10 (TBA)
+------------
+
+Features:
+
+* Fixed Invoker to map subclasses (it is now possible to use a subclass of
+  Application and it will be properly mapped in callbacks which reference
+  Application)
+
 0.4.9 (2014-10-15)
 ------------------
 
