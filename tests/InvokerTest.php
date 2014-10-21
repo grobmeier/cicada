@@ -26,6 +26,11 @@ function invokerTestFunction(Application $app, Request $request, $foo, $bar)
     return func_get_args();
 }
 
+class ApplicationSubClass extends Application
+{
+
+}
+
 class InvokerTest extends \PHPUnit_Framework_TestCase
 {
     private $namedParams = [
@@ -146,6 +151,33 @@ class InvokerTest extends \PHPUnit_Framework_TestCase
         $actual3 = $invoker->invoke([$object, "execute3"], $this->namedParams, $classParams);
         $actual4 = $invoker->invoke([$object, "execute4"], $this->namedParams, $classParams);
         $actual5 = $invoker->invoke([$object, "execute5"], $this->namedParams, $classParams);
+
+        $expected1 = ['foo_val', 'bar_val'];
+        $expected2 = ['foo_val', 'bar_val', $request];
+        $expected3 = [$app, $request, 'foo_val', 'bar_val'];
+        $expected4 = [$app, $request, 'foo_val', 'bar_val'];
+        $expected5 = [$app, $request, 'foo_val', 'bar_val', null];
+
+        $this->assertEquals($expected1, $actual1);
+        $this->assertEquals($expected2, $actual2);
+        $this->assertEquals($expected3, $actual3);
+        $this->assertEquals($expected4, $actual4);
+        $this->assertEquals($expected5, $actual5);
+    }
+
+    public function testInvokeSubClass()
+    {
+        // Check that a subclass of Application is properly injected
+        $app = new ApplicationSubClass();
+        $request = new Request();
+        $classParams = [$app, $request];
+
+        $invoker = new Invoker();
+        $actual1 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute1", $this->namedParams, $classParams);
+        $actual2 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute2", $this->namedParams, $classParams);
+        $actual3 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute3", $this->namedParams, $classParams);
+        $actual4 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute4", $this->namedParams, $classParams);
+        $actual5 = $invoker->invoke("Cicada\Tests\InvokerTestAction::execute5", $this->namedParams, $classParams);
 
         $expected1 = ['foo_val', 'bar_val'];
         $expected2 = ['foo_val', 'bar_val', $request];

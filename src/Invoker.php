@@ -178,15 +178,15 @@ class Invoker
                 throw new \InvalidArgumentException("\$classParams entries must be objects.");
             }
 
-            $class = get_class($param);
+            // Iterate for param class and all parent classes. This way you can
+            // inject subclasses as well as the specified class
+            for ($class = get_class($param); $class !== false; $class = get_parent_class($class)) {
+                if (isset($reindexed[$class])) {
+                    throw new \InvalidArgumentException("\$classParams contains multiple objects of the same class [$class].");
+                }
 
-            if (isset($reindexed[$class])) {
-                throw new \InvalidArgumentException(
-                    "\$classParams contains multiple objects of the same class [$class]."
-                );
+                $reindexed[$class] = $param;
             }
-
-            $reindexed[$class] = $param;
         }
 
         return $reindexed;

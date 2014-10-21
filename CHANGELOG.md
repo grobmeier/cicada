@@ -1,6 +1,16 @@
 Cicada changelog
 ================
 
+0.4.10 (2014-10-21)
+-------------------
+
+Features:
+
+* Fixed Invoker to map subclasses (it is now possible to use a subclass of
+  Application and it will be properly mapped in callbacks which reference
+  Application)
+* Updated HTTP Foundation dependency to 2.5.x
+
 0.4.9 (2014-10-15)
 ------------------
 
