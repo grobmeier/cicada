@@ -33,6 +33,7 @@ class Route
     const HTTP_DELETE = 'DELETE';
     const HTTP_HEAD = 'HEAD';
     const HTTP_OPTIONS = 'OPTIONS';
+    const HTTP_PATCH = 'PATCH';
 
     /** Array of known HTTP methods. */
     private $methods = [
@@ -42,6 +43,7 @@ class Route
         self::HTTP_DELETE,
         self::HTTP_HEAD,
         self::HTTP_OPTIONS,
+        self::HTTP_PATCH,
     ];
 
     /** The route's path, e.g. `/user/{id}/posts`. */

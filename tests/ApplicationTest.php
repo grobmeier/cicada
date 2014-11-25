@@ -90,7 +90,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
     public function testAddingRoutes()
     {
-        $callback = function() {};
+        $callback = function () {};
 
         $app = new Application();
         $app->get('/get', $callback);
@@ -98,28 +98,44 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app->put('/put', $callback);
         $app->delete('/delete', $callback);
         $app->head('/head', $callback);
+        $app->options('/options', $callback);
+        $app->patch('/patch', $callback);
 
         $routes = $app['router']->getRoutes();
 
-        $this->assertCount(5, $routes);
+        $this->assertCount(7, $routes);
 
         $this->assertInstanceOf(Route::class, $routes[0]);
         $this->assertInstanceOf(Route::class, $routes[1]);
         $this->assertInstanceOf(Route::class, $routes[2]);
         $this->assertInstanceOf(Route::class, $routes[3]);
         $this->assertInstanceOf(Route::class, $routes[4]);
+        $this->assertInstanceOf(Route::class, $routes[5]);
+        $this->assertInstanceOf(Route::class, $routes[6]);
 
         $this->assertSame('/get', $routes[0]->getPath());
         $this->assertSame('/post', $routes[1]->getPath());
         $this->assertSame('/put', $routes[2]->getPath());
         $this->assertSame('/delete', $routes[3]->getPath());
         $this->assertSame('/head', $routes[4]->getPath());
+        $this->assertSame('/options', $routes[5]->getPath());
+        $this->assertSame('/patch', $routes[6]->getPath());
+
+        $this->assertSame('GET', $routes[0]->getMethod());
+        $this->assertSame('POST', $routes[1]->getMethod());
+        $this->assertSame('PUT', $routes[2]->getMethod());
+        $this->assertSame('DELETE', $routes[3]->getMethod());
+        $this->assertSame('HEAD', $routes[4]->getMethod());
+        $this->assertSame('OPTIONS', $routes[5]->getMethod());
+        $this->assertSame('PATCH', $routes[6]->getMethod());
 
         $this->assertSame($callback, $routes[0]->getCallback());
         $this->assertSame($callback, $routes[1]->getCallback());
         $this->assertSame($callback, $routes[2]->getCallback());
         $this->assertSame($callback, $routes[3]->getCallback());
         $this->assertSame($callback, $routes[4]->getCallback());
+        $this->assertSame($callback, $routes[5]->getCallback());
+        $this->assertSame($callback, $routes[6]->getCallback());
     }
 
     public function testBeforeAfter()
@@ -186,10 +202,10 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app = new Application();
 
         // Create a route and a request which matches that route
-        $app->get('/', function() {});
+        $app->get('/', function () {});
         $request = Request::create('http://www.google.com/');
 
-        $app['emitter']->on(Router::EVENT_MATCH, function(Application $app, Request $req, Route $route) {
+        $app['emitter']->on(Router::EVENT_MATCH, function (Application $app, Request $req, Route $route) {
             $this->indicator = 1;
         });
 
@@ -206,10 +222,10 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app = new Application();
 
         // Create a route and a request which does NOT match that route
-        $app->get('/foo/', function() {});
+        $app->get('/foo/', function () {});
         $request = Request::create('http://www.google.com/');
 
-        $app['emitter']->on(Router::EVENT_NO_MATCH, function(Application $app, Request $req) {
+        $app['emitter']->on(Router::EVENT_NO_MATCH, function (Application $app, Request $req) {
             $this->indicator = 1;
         });
 
