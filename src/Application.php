@@ -85,6 +85,11 @@ class Application extends \Pimple\Container
         return $this->query(Route::HTTP_OPTIONS, $pattern, $callback);
     }
 
+    public function patch($pattern, $callback)
+    {
+        return $this->query(Route::HTTP_PATCH, $pattern, $callback);
+    }
+
     public function query($method, $pattern, $callback)
     {
         $route = new Route($pattern, $callback, $method);
