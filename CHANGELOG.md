@@ -1,6 +1,12 @@
 Cicada changelog
 ================
 
+0.4.11 (2014-11-25)
+-------------------
+
+* Route prefix can contain placeholders
+* Route can accept PATCH requests
+
 0.4.10 (2014-10-21)
 -------------------
 
