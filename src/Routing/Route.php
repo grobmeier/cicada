@@ -138,10 +138,10 @@ class Route
             $route = $this->path;
         }
 
-        $path = $this->path;
+        $path = $this->prefix . $this->path;
 
         // Locate placeholders in curly braces
-        $count = preg_match_all('/{([^}]+)}/', $this->path, $matches);
+        $count = preg_match_all('/{([^}]+)}/', $path, $matches);
 
         foreach ($matches[1] as $name) {
 
@@ -163,7 +163,7 @@ class Route
             $path = str_replace('{' . $name . '}', $value, $path);
         }
 
-        return $this->prefix . $path;
+        return $path;
     }
 
     // -- Builder methods ------------------------------------------------------
@@ -235,7 +235,7 @@ class Route
     public function getRegexPattern()
     {
         if (!isset($this->pattern)) {
-            $this->pattern = $this->processPath($this->path, $this->asserts);
+            $this->pattern = $this->compileRegex();
         }
 
         return $this->pattern;
@@ -273,8 +273,16 @@ class Route
 
     // -- Private methods ------------------------------------------------------
 
-    private function processPath($path, $asserts)
+    /**
+     * Compiles a regex pattern which matches this route.
+     */
+    private function compileRegex()
     {
+        // Prepend the prefix
+        $path = $this->prefix . $this->path;
+
+        $asserts = $this->asserts;
+
         // Replace placeholders in curly braces with named regex groups
         $callback = function ($matches) use ($asserts) {
             $name = $matches[1];
@@ -284,9 +292,6 @@ class Route
         };
 
         $pattern = preg_replace_callback('/{([^}]+)}/', $callback, $path);
-
-        // Prepend the prefix
-        $pattern = $this->prefix . $pattern;
 
         // Avoid double slashes
         $pattern = preg_replace('/\/+/', '/', $pattern);
