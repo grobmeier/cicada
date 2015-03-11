@@ -1,6 +1,11 @@
 Cicada changelog
 ================
 
+0.4.12 (TBA)
+------------
+
+* The Request is available in error handlers
+
 0.4.11 (2014-11-25)
 -------------------
 

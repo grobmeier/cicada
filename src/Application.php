@@ -204,7 +204,7 @@ class Application extends \Pimple\Container implements HttpKernelInterface
      *                         (one of HttpKernelInterface::MASTER_REQUEST or HttpKernelInterface::SUB_REQUEST)
      * @param bool    $catch   Whether to catch exceptions or not
      *
-     * @return Response A Response instance
+     * @return Symfony\Component\HttpFoundation\Response A Response instance
      *
      * @throws \Exception When an Exception occurs during processing
      *
@@ -219,7 +219,7 @@ class Application extends \Pimple\Container implements HttpKernelInterface
             $response = $this->processRequest($this, $request, $callable);
         } catch (\Exception $ex) {
             // On failure invoke the error handler
-            $response = $this['exception_handler']->handle($ex);
+            $response = $this['exception_handler']->handle($ex, $request);
         }
 
         // If all else fails...
