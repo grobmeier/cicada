@@ -174,10 +174,9 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app->after($a2);
 
         $_SERVER["REQUEST_URI"] = "/";
-
-        ob_start();
-        $app->run();
-        $result = ob_get_clean();
+        $request = Request::createFromGlobals();
+        $response = $app->handle($request);
+        $responseText = $response->getContent();
 
         $expected = [
             'b1',
@@ -188,7 +187,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         ];
 
         $this->assertEquals($expected, $this->indicator);
-        $this->assertEquals("Foo", $result);
+        $this->assertEquals("Foo", $responseText);
     }
 
     public function testExceptionWithHandler()
