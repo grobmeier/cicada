@@ -1,10 +1,13 @@
 Cicada changelog
 ================
 
-0.4.12 (TBA)
-------------
+0.4.13 (2015-03-12)
+-------------------
 
-* The Request is available in error handlers
+* Made Application implement HttpInterface
+* Made Request is available in error handlers
+* Removed unused log4php dependency
+* Removed unused classes Configuration and AbstractAction
 
 0.4.11 (2014-11-25)
 -------------------
