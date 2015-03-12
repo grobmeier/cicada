@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013-2014 Christian Grobmeier, Ivan Habunek
+ *  Copyright 2013-2015 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 namespace Cicada\Tests;
 
 use Cicada\ExceptionHandler;
+
+use Mockery as m;
 
 class ExceptionHandlerTest extends \PHPUnit_Framework_TestCase
 {
@@ -35,7 +37,7 @@ class ExceptionHandlerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Invalid exception callback: Has 0 arguments. Expected exactly 1.
+     * @expectedExceptionMessage Invalid exception callback: Has no arguments. Expected at least one.
      */
     public function testAddTooFewArguemnts()
     {
@@ -46,18 +48,7 @@ class ExceptionHandlerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Invalid exception callback: Has 3 arguments. Expected exactly 1.
-     */
-    public function testAddTooManyArguemnts()
-    {
-        $handler = new ExceptionHandler();
-        $callback = function($x, $y, $z) {};
-        $handler->add($callback);
-    }
-
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Invalid exception callback: Argument must have a class type hint.
+     * @expectedExceptionMessage Invalid exception callback: The first argument must have a class type hint.
      */
     public function testAddNoTypeHint()
     {
@@ -72,10 +63,11 @@ class ExceptionHandlerTest extends \PHPUnit_Framework_TestCase
         $handler->add(function(\InvalidArgumentException $ex) { return 1; });
         $handler->add(function(\Exception $ex) { return 2; });
 
-        $actual = $handler->handle(new \InvalidArgumentException());
+        $request = m::mock('Symfony\\Component\\HttpFoundation\\Request');
+        $actual = $handler->handle(new \InvalidArgumentException(), $request);
         $this->assertSame(1, $actual);
 
-        $actual = $handler->handle(new \Exception());
+        $actual = $handler->handle(new \Exception(), $request);
         $this->assertSame(2, $actual);
     }
 
@@ -84,7 +76,8 @@ class ExceptionHandlerTest extends \PHPUnit_Framework_TestCase
         $handler = new ExceptionHandler();
         $handler->add(function(\InvalidArgumentException $ex) { return 1; });
 
-        $actual = $handler->handle(new \BadMethodCallException());
+        $request = m::mock('Symfony\\Component\\HttpFoundation\\Request');
+        $actual = $handler->handle(new \BadMethodCallException(), $request);
         $this->assertNull($actual);
     }
 }

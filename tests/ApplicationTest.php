@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013-2014 Christian Grobmeier, Ivan Habunek
+ *  Copyright 2013-2015 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ use Evenement\EventEmitter;
 
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
@@ -173,10 +174,9 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app->after($a2);
 
         $_SERVER["REQUEST_URI"] = "/";
-
-        ob_start();
-        $app->run();
-        $result = ob_get_clean();
+        $request = Request::createFromGlobals();
+        $response = $app->handle($request);
+        $responseText = $response->getContent();
 
         $expected = [
             'b1',
@@ -187,7 +187,52 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         ];
 
         $this->assertEquals($expected, $this->indicator);
-        $this->assertEquals("Foo", $result);
+        $this->assertEquals("Foo", $responseText);
+    }
+
+    public function testExceptionWithHandler()
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+
+        $request = Request::createFromGlobals();
+        $response = new Response("foo");
+
+        $callback = function () {
+            throw new \InvalidArgumentException("Failed");
+        };
+
+        $exception = function (\InvalidArgumentException $ex, Request $reqInner) use ($request, $response) {
+            $this->assertSame($reqInner, $request);
+            return $response;
+        };
+
+        $app = new Application();
+        $app->get('/', $callback);
+        $app->exception($exception);
+
+        $actual = $app->handle($request);
+
+        $this->assertSame($response, $actual);
+    }
+
+    public function testExceptionWithoutHandler()
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+
+        $request = Request::createFromGlobals();
+
+        $callback = function () {
+            throw new \InvalidArgumentException("Failed");
+        };
+
+        $app = new Application();
+        $app->get('/', $callback);
+
+        $response = $app->handle($request);
+
+        $this->assertInstanceOf("Symfony\\Component\\HttpFoundation\\Response", $response);
+        $this->assertSame("Page failed to render.", $response->getContent());
+        $this->assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testEmitter()
