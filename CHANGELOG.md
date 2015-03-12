@@ -1,7 +1,10 @@
 Cicada changelog
 ================
 
-0.4.13 (2015-03-12)
+0.4.13 (TBA)
+------------
+
+0.4.12 (2015-03-12)
 -------------------
 
 * Made Application implement HttpInterface
