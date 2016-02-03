@@ -226,6 +226,55 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Bar", $responseText);
     }
 
+    public function testFinishRunsAfterException()
+    {
+        $this->indicator = [];
+
+        $callback = $this->addIndicator('callback', 'Foo');
+
+        $app = new Application();
+
+        $app->before($this->addIndicator('b1'));
+        $app->before($this->addIndicator('b2'));
+        $app->after($this->addIndicator('a1'));
+        $app->after($this->addIndicator('a2'));
+        $app->finish($this->addIndicator('f1'));
+        $app->finish($this->addIndicator('f2'));
+
+        // Route throws an exception
+        $app->get('/', function () {
+            $this->indicator[] = 'callback';
+            throw new \Exception("FAIL");
+        });
+
+        // Exception handler handles it
+        $app->exception(function (\Exception $ex) {
+            $this->indicator[] = 'ex';
+            return new Response("Exception handled");
+        });
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
+
+        // Expected:
+        //   - finish middleware executed
+        //   - after middleware not excecuted
+        $expected = [
+            'b1',
+            'b2',
+            'callback',
+            'ex',
+            'f1',
+            'f2',
+        ];
+
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Exception handled", $responseText);
+    }
+
     public function testExceptionWithHandler()
     {
         $_SERVER["REQUEST_URI"] = "/";
