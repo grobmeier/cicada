@@ -29,6 +29,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 class Application extends \Pimple\Container implements HttpKernelInterface
 {
     use RequestProcessorTrait;
+    use FinishTrait;
 
     public function __construct()
     {
@@ -187,10 +188,10 @@ class Application extends \Pimple\Container implements HttpKernelInterface
     public function run()
     {
         $request = Request::createFromGlobals();
-
         $response = $this->handle($request);
-
         $response->send();
+
+        $this->invokeFinish([], [$this, $request, $response]);
     }
 
     /**
