@@ -28,7 +28,7 @@ trait RequestProcessorTrait
     private $after = [];
 
     /** Adds a callback to execute before the request. */
-    public function before($callback)
+    public function before(callable $callback)
     {
         $this->before[] = $callback;
 
@@ -43,14 +43,15 @@ trait RequestProcessorTrait
         return $this;
     }
 
-    public function processRequest(
-        Application $app,
-        Request $request,
-        $callback,
-        array $arguments = []
-    )
+    public function processRequest(Application $app, Request $request, $callback, array $arguments = [])
     {
-        $response = $this->processRequestBefore($app, $request, $callback, $arguments);
+        // Callbacks to execute before the route
+        $response = $this->invokeBefore($arguments, [$app, $request]);
+
+        // Invoke callback only if before callbacks did not return a response
+        if ($response === null) {
+            $response = (new Invoker())->invoke($callback, $arguments, [$app, $request]);
+        }
 
         // If callback does not return a Response, try to create one. This
         // throws an exception if $response cannot be converted to a Response.
@@ -59,40 +60,20 @@ trait RequestProcessorTrait
         }
 
         // Callbacks to execute after the route
-        $this->invokeAfter($app, $request, $arguments, $response);
+        $this->invokeAfter($arguments, [$app, $request, $response]);
 
         return $response;
-    }
-
-    private function processRequestBefore(
-        Application $app,
-        Request $request,
-        $callback,
-        array $arguments = []
-    )
-    {
-        // Callbacks to execute before the route
-        $response = $this->invokeBefore($app, $request, $arguments);
-
-        // If they return a response, it stops route execution
-        if (isset($response)) {
-            return $response;
-        }
-
-        // Invoke the route callback
-        $invoker = new Invoker();
-        return $invoker->invoke($callback, $arguments, [$app, $request]);
     }
 
     /**
      * Invokes callbacks from `$this->before`, and if any of them returns a
      * Response stops processing others and returns the given response.
      */
-    private function invokeBefore(Application $app, Request $request, array $arguments)
+    private function invokeBefore(array $namedParams, array $classParams)
     {
         $invoker = new Invoker();
         foreach ($this->before as $function) {
-            $response = $invoker->invoke($function, $arguments, [$app, $request]);
+            $response = $invoker->invoke($function, $namedParams, $classParams);
             if ($response !== null) {
                 return $response;
             }
@@ -102,11 +83,11 @@ trait RequestProcessorTrait
     /**
      * Invokes the callbacks from `$this->after`, ignoring any returned values.
      */
-    private function invokeAfter(Application $app, Request $request, array $arguments, Response $response)
+    private function invokeAfter(array $namedParams, array $classParams)
     {
         $invoker = new Invoker();
         foreach ($this->after as $function) {
-            $invoker->invoke($function, $arguments, [$app, $request, $response]);
+            $invoker->invoke($function, $namedParams, $classParams);
         }
     }
 }

@@ -139,44 +139,37 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($callback, $routes[6]->getCallback());
     }
 
-    public function testBeforeAfter()
+    private function addIndicator($item, $return = null)
+    {
+        return function () use ($item, $return) {
+            $this->indicator[] = $item;
+            return $return;
+        };
+    }
+
+    public function _testBeforeAfter()
     {
         $this->indicator = [];
 
-        $b1 = function () {
-            $this->indicator[] = 'b1';
-        };
-
-        $b2 = function () {
-            $this->indicator[] = 'b2';
-        };
-
-        $a1 = function () {
-            $this->indicator[] = 'a1';
-        };
-
-        $a2 = function () {
-            $this->indicator[] = 'a2';
-        };
-
-        $callback = function () {
-            $this->indicator[] = 'callback';
-            return "Foo";
-        };
+        $callback = $this->addIndicator('callback', 'Foo');
 
         $app = new Application();
         $app->get('/', $callback);
 
-        $app->before($b1);
-        $app->before($b2);
+        $app->before($this->addIndicator('b1'));
+        $app->before($this->addIndicator('b2'));
 
-        $app->after($a1);
-        $app->after($a2);
+        $app->after($this->addIndicator('a1'));
+        $app->after($this->addIndicator('a2'));
+
+        $app->finish($this->addIndicator('f1'));
+        $app->finish($this->addIndicator('f2'));
 
         $_SERVER["REQUEST_URI"] = "/";
-        $request = Request::createFromGlobals();
-        $response = $app->handle($request);
-        $responseText = $response->getContent();
+
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
 
         $expected = [
             'b1',
@@ -184,10 +177,102 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
             'callback',
             'a1',
             'a2',
+            'f1',
+            'f2',
         ];
 
         $this->assertEquals($expected, $this->indicator);
         $this->assertEquals("Foo", $responseText);
+    }
+
+    public function testBeforeStopsHandler()
+    {
+        $this->indicator = [];
+
+        $callback = $this->addIndicator('callback', 'Foo');
+
+        $app = new Application();
+        $app->get('/', $callback);
+
+        // Middleware b2 will return a response which will short circuit the
+        // execution, meaning b3 middleware and callback will not be called but
+        // the reponse will be given to after/finish middlewares
+        $app->before($this->addIndicator('b1'));
+        $app->before($this->addIndicator('b2', new Response('Bar'))); // short circuit
+        $app->before($this->addIndicator('b3')); // this should be skipped
+
+        $app->after($this->addIndicator('a1'));
+        $app->after($this->addIndicator('a2'));
+
+        $app->finish($this->addIndicator('f1'));
+        $app->finish($this->addIndicator('f2'));
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
+
+        $expected = [
+            'b1',
+            'b2',
+            'a1',
+            'a2',
+            'f1',
+            'f2',
+        ];
+
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Bar", $responseText);
+    }
+
+    public function testFinishRunsAfterException()
+    {
+        $this->indicator = [];
+
+        $callback = $this->addIndicator('callback', 'Foo');
+
+        $app = new Application();
+
+        $app->before($this->addIndicator('b1'));
+        $app->before($this->addIndicator('b2'));
+        $app->after($this->addIndicator('a1'));
+        $app->after($this->addIndicator('a2'));
+        $app->finish($this->addIndicator('f1'));
+        $app->finish($this->addIndicator('f2'));
+
+        // Route throws an exception
+        $app->get('/', function () {
+            $this->indicator[] = 'callback';
+            throw new \Exception("FAIL");
+        });
+
+        // Exception handler handles it
+        $app->exception(function (\Exception $ex) {
+            $this->indicator[] = 'ex';
+            return new Response("Exception handled");
+        });
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
+
+        // Expected:
+        //   - finish middleware executed
+        //   - after middleware not excecuted
+        $expected = [
+            'b1',
+            'b2',
+            'callback',
+            'ex',
+            'f1',
+            'f2',
+        ];
+
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Exception handled", $responseText);
     }
 
     public function testExceptionWithHandler()
