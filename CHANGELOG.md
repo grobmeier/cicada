@@ -1,14 +1,17 @@
 Cicada changelog
 ================
 
-0.4.13 (TBA)
-------------
+0.5.0 (2016-02-03)
+------------------
+
+* Added finish() middleware
+* Removed PhpRenderer
 
 0.4.12 (2015-03-12)
 -------------------
 
 * Made Application implement HttpInterface
-* Made Request is available in error handlers
+* Made Request available in error handlers
 * Removed unused log4php dependency
 * Removed unused classes Configuration and AbstractAction
 
