@@ -196,7 +196,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
         // Middleware b2 will return a response which will short circuit the
         // execution, meaning b3 middleware and callback will not be called but
-        // the reponse will be given to after/finish middlewares
+        // the response will be given to after/finish middlewares
         $app->before($this->addIndicator('b1'));
         $app->before($this->addIndicator('b2', new Response('Bar'))); // short circuit
         $app->before($this->addIndicator('b3')); // this should be skipped
@@ -224,6 +224,37 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($expected, $this->indicator);
         $this->assertEquals("Bar", $responseText);
+    }
+
+    public function testResponseGoesThroughAfter()
+    {
+        $this->indicator = [];
+
+        $callback = $this->addIndicator('callback', new Response('Hey'));
+
+        $app = new Application;
+        $app->get('/', $callback);
+
+        $app->before($this->addIndicator('b'));
+
+        $app->after($this->addIndicator('a1'));
+        $app->after($this->addIndicator('a2', new Response('Hoo')));
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
+
+        $expected = [
+            'b',
+            'callback',
+            'a1',
+            'a2',
+        ];
+
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Hoo", $responseText);
     }
 
     public function testFinishRunsAfterException()
