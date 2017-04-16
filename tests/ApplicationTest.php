@@ -24,6 +24,7 @@ use Cicada\Routing\Router;
 
 use Evenement\EventEmitter;
 
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -226,35 +227,44 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Bar", $responseText);
     }
 
-    public function testResponseGoesThroughAfter()
+    public function testResponseGoesThroughAfterFunctions()
     {
+        // Arrange
         $this->indicator = [];
 
-        $callback = $this->addIndicator('callback', new Response('Hey'));
-
         $app = new Application;
+        $callback = $this->addIndicator('callback', new Response('Hello'));
         $app->get('/', $callback);
 
-        $app->before($this->addIndicator('b'));
+        $a0 = function (Application $app, Request $request, Response $response) {
+            return $response;
+        };
 
-        $app->after($this->addIndicator('a1'));
-        $app->after($this->addIndicator('a2', new Response('Hoo')));
+        $a1 = function (Application $app, Request $request, Response $response) {
+            $newContent = $response->getContent() . ' Big';
+            $response->setContent($newContent);
+            return $response;
+        };
+
+        $a2 = function (Application $app, Request $request, Response $response) {
+            $newContent = $response->getContent() . ' World';
+            $response->setContent($newContent);
+            return $response;
+        };
+
+        $app->after($a0);
+        $app->after($a1);
+        $app->after($a2);
 
         $_SERVER["REQUEST_URI"] = "/";
 
+        // Act
         ob_start();
         $app->run();
         $responseText = ob_get_clean();
 
-        $expected = [
-            'b',
-            'callback',
-            'a1',
-            'a2',
-        ];
-
-        $this->assertEquals($expected, $this->indicator);
-        $this->assertEquals("Hoo", $responseText);
+        // Assert
+        $this->assertEquals("Hello Big World", $responseText);
     }
 
     public function testFinishRunsAfterException()
