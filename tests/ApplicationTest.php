@@ -24,7 +24,6 @@ use Cicada\Routing\Router;
 
 use Evenement\EventEmitter;
 
-use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

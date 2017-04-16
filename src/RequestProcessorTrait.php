@@ -81,7 +81,7 @@ trait RequestProcessorTrait
     }
 
     /**
-     * Invokes the callbacks from `$this->after`, modify Response when necessary
+     * Invokes the callbacks from `$this->after`, modify Response when necessary.
      */
     private function invokeAfter(array $namedParams, array $classParams)
     {
