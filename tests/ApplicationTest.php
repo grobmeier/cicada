@@ -236,19 +236,16 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app->get('/', $callback);
 
         $a0 = function (Application $app, Request $request, Response $response) {
-            return $response;
         };
 
         $a1 = function (Application $app, Request $request, Response $response) {
             $newContent = $response->getContent() . ' Big';
             $response->setContent($newContent);
-            return $response;
         };
 
         $a2 = function (Application $app, Request $request, Response $response) {
             $newContent = $response->getContent() . ' World';
             $response->setContent($newContent);
-            return $response;
         };
 
         $app->after($a0);
