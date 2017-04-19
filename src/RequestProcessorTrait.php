@@ -60,7 +60,7 @@ trait RequestProcessorTrait
         }
 
         // Callbacks to execute after the route
-        $response = $this->invokeAfter($arguments, [$app, $request, $response]);
+        $this->invokeAfter($arguments, [$app, $request, $response]);
 
         return $response;
     }
@@ -87,13 +87,7 @@ trait RequestProcessorTrait
     {
         $invoker = new Invoker();
         foreach ($this->after as $function) {
-            $response = $invoker->invoke($function, $namedParams, $classParams);
-            if ($response instanceof Response) {
-                $classParams[2] = $response;
-            }
+            $invoker->invoke($function, $namedParams, $classParams);
         }
-
-        $response = $classParams[2];
-        return $response;
     }
 }
