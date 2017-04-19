@@ -226,6 +226,43 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Bar", $responseText);
     }
 
+    public function testResponseGoesThroughAfterFunctions()
+    {
+        // Arrange
+        $this->indicator = [];
+
+        $app = new Application;
+        $callback = $this->addIndicator('callback', new Response('Hello'));
+        $app->get('/', $callback);
+
+        $a0 = function (Application $app, Request $request, Response $response) {
+        };
+
+        $a1 = function (Application $app, Request $request, Response $response) {
+            $newContent = $response->getContent() . ' Big';
+            $response->setContent($newContent);
+        };
+
+        $a2 = function (Application $app, Request $request, Response $response) {
+            $newContent = $response->getContent() . ' World';
+            $response->setContent($newContent);
+        };
+
+        $app->after($a0);
+        $app->after($a1);
+        $app->after($a2);
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        // Act
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
+
+        // Assert
+        $this->assertEquals("Hello Big World", $responseText);
+    }
+
     public function testFinishRunsAfterException()
     {
         $this->indicator = [];
