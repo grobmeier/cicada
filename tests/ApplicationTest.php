@@ -312,6 +312,45 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Exception handled", $responseText);
     }
 
+    public function testClearBeforeAfterFunctions()
+    {
+        // Arrange
+        $this->indicator = [];
+
+        $callback = $this->addIndicator('callback', 'Foo');
+
+        $app = new Application();
+        $app->get('/', $callback);
+
+        $app->before($this->addIndicator('b1'));
+        $app->before($this->addIndicator('b2'));
+
+        $app->after($this->addIndicator('a1'));
+        $app->after($this->addIndicator('a2'));
+
+        $app->finish($this->addIndicator('f1'));
+        $app->finish($this->addIndicator('f2'));
+
+        // Action
+        $app->clearMiddlewares();
+
+        $_SERVER["REQUEST_URI"] = "/";
+
+        ob_start();
+        $app->run();
+        $responseText = ob_get_clean();
+
+        // Assertion
+        $expected = [
+            'callback',
+            'f1',
+            'f2',
+        ];
+
+        $this->assertEquals($expected, $this->indicator);
+        $this->assertEquals("Foo", $responseText);
+    }
+
     public function testExceptionWithHandler()
     {
         $_SERVER["REQUEST_URI"] = "/";
