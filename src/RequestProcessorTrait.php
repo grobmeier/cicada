@@ -65,6 +65,27 @@ trait RequestProcessorTrait
         return $response;
     }
 
+    /** Clear the before callbacks */
+    public function clearBefore()
+    {
+        $this->before = [];
+        return $this;
+    }
+
+    /** Clear the after callbacks */
+    public function clearAfter()
+    {
+        $this->after = [];
+        return $this;
+    }
+
+    /** Clear both before and after callbacks */
+    public function clearMiddlewares()
+    {
+        $this->clearBefore()->clearAfter();
+        return $this;
+    }
+
     /**
      * Invokes callbacks from `$this->before`, and if any of them returns a
      * Response stops processing others and returns the given response.
