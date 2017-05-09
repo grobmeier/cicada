@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2015 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,36 +16,23 @@
  */
 namespace Cicada;
 
-class Configuration
+/**
+ * Provides a set of callbacks to be called after the request was dispatched.
+ */
+trait FinishTrait
 {
-    private static $instance;
+    private $finish = [];
 
-    private $map = array();
-
-    private function __construct()
+    public function finish($callback)
     {
+        $this->finish[] = $callback;
     }
 
-    public function add($key, $value)
+    private function invokeFinish(array $namedParams, array $classParams)
     {
-        $this->map[$key] = $value;
-    }
-
-    public function get($key)
-    {
-        if (isset($this->map[$key])) {
-            return $this->map[$key];
+        $invoker = new Invoker();
+        foreach ($this->finish as $function) {
+            $invoker->invoke($function, $namedParams, $classParams);
         }
-
-        return null;
-    }
-
-    public static function getInstance()
-    {
-        if (self::$instance == null) {
-            self::$instance = new Configuration();
-        }
-
-        return self::$instance;
     }
 }

@@ -1,3 +1,5 @@
 .vagrant
 /vendor/
+/target/
 /tmp/
+php_errors.log

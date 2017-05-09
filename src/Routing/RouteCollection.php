@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2015 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,25 +16,16 @@
  */
 namespace Cicada\Routing;
 
-use Cicada\Application;
-
-use Cicada\Validators\RegexValidator;
-use Cicada\Validators\StringLengthValidator;
-use Cicada\Validators\Validator;
-
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-
 class RouteCollection
 {
     /**
      * The route on which all routes within the collection are based.
-     * @var Cicada\Routing\Route
+     * @var \Cicada\Routing\Route
      */
     private $baseRoute;
 
     /**
-     * Array of routes within the collecton.
+     * Array of routes within the collection.
      * @var array
      */
     private $routes  = [];
@@ -64,38 +55,45 @@ class RouteCollection
 
     public function get($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_GET);
+        return $this->query(Route::HTTP_GET, $path, $callback);
     }
 
     public function post($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_POST);
+        return $this->query(Route::HTTP_POST, $path, $callback);
     }
 
     public function put($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_PUT);
+        return $this->query(Route::HTTP_PUT, $path, $callback);
     }
 
     public function delete($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_GET);
+        return $this->query(Route::HTTP_DELETE, $path, $callback);
     }
 
     public function head($path, $callback)
     {
-        $this->generic($path, $callback, Route::HTTP_GET);
+        return $this->query(Route::HTTP_HEAD, $path, $callback);
     }
 
-    public function generic($path, $callback, $method)
+    public function options($path, $callback)
+    {
+        return $this->query(Route::HTTP_OPTIONS, $path, $callback);
+    }
+
+    public function query($method, $path, $callback)
     {
         $route = clone $this->baseRoute;
 
-        $route->method(Route::HTTP_GET)
-            ->path($path)
-            ->callback($callback);
+        $route->path($path)
+            ->callback($callback)
+            ->method($method);
 
         $this->routes[] = $route;
+
+        return $route;
     }
 
     public function getRoutes()

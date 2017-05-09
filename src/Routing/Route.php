@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2013 Christian Grobmeier
+ *  Copyright 2013-2015 Christian Grobmeier, Ivan Habunek
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,21 +17,23 @@
 namespace Cicada\Routing;
 
 use Cicada\Application;
-
-use Cicada\Validators\RegexValidator;
-use Cicada\Validators\StringLengthValidator;
-use Cicada\Validators\Validator;
+use Cicada\RequestProcessorTrait;
+use Cicada\Invoker;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class Route
 {
+    use RequestProcessorTrait;
+
     const HTTP_GET = 'GET';
     const HTTP_POST = 'POST';
     const HTTP_PUT = 'PUT';
     const HTTP_DELETE = 'DELETE';
     const HTTP_HEAD = 'HEAD';
+    const HTTP_OPTIONS = 'OPTIONS';
+    const HTTP_PATCH = 'PATCH';
 
     /** Array of known HTTP methods. */
     private $methods = [
@@ -40,6 +42,8 @@ class Route
         self::HTTP_PUT,
         self::HTTP_DELETE,
         self::HTTP_HEAD,
+        self::HTTP_OPTIONS,
+        self::HTTP_PATCH,
     ];
 
     /** The route's path, e.g. `/user/{id}/posts`. */
@@ -60,27 +64,26 @@ class Route
     /** The prefix to put before the route. */
     private $prefix = '';
 
-    /** Array of callbacks to call before the request. */
-    private $before = [];
-
-    /** Array of callbacks to call after the request. */
-    private $after = [];
-
-    private $fieldValidators = [];
+    /** Route name, optional. */
+    private $name;
 
     public function __construct(
         $path = '/',
         $callback = null,
         $method = null,
         $before = [],
-        $after = []
-    )
-    {
+        $after = [],
+        $name = null
+    ) {
         $this->path = $path;
         $this->callback = $callback;
-        $this->method = $method;
         $this->before = $before;
         $this->after = $after;
+        $this->name = $name;
+
+        if (isset($method)) {
+            $this->method($method);
+        }
     }
 
     /**
@@ -108,58 +111,64 @@ class Route
     /**
      * Processes the Request and returns a Response.
      *
-     * @return Response
+     * @throws UnexpectedValueException If the route callback returns a value
+     *         which is not a string or Response object.
      */
-    public function run(Application $app, Request $request, array $arguments)
+    public function run(Application $app, Request $request, array $arguments = [])
     {
-        $this->validateRequest($request, $arguments);
+        return $this->processRequest($app, $request, $this->callback, $arguments);
+    }
 
-        // Call before
-        foreach ($this->before as $before) {
-            $result = $before($app, $request);
-            if (isset($result)) {
-                return $result;
+    /**
+     * Returns the route's path, with {placeholders} substituted with values
+     * from $params.
+     *
+     * For example, if `$this->path = "/hello/{name}"`, and
+     * `$params = ["name" => "ivan"]`, this method will return `/hello/ivan`.
+     *
+     * @param  array $params Associative array holding parameters to substitute.
+     *
+     * @return string The route's path.
+     *
+     * @throws \Exception If any of the params is missing.
+     * @throws \Exception If any of the params does not pass assert validation.
+     */
+    public function getRealPath($params)
+    {
+        $route = $this->getName();
+        if (empty($route)) {
+            $route = $this->path;
+        }
+
+        $path = $this->prefix . $this->path;
+
+        // Locate placeholders in curly braces
+        $count = preg_match_all('/{([^}]+)}/', $path, $matches);
+
+        foreach ($matches[1] as $name) {
+
+            // Parameter must be given
+            if (!isset($params[$name])) {
+                throw new \Exception("Missing parameter \"$name\" for route \"$route\".");
             }
+
+            $value = $params[$name];
+
+            // If an assert exists, the parameter must match it
+            if (isset($this->asserts[$name])) {
+                $pattern = $this->asserts[$name];
+                if (!preg_match("/^" . $pattern . "$/", $value)) {
+                    throw new \Exception("Route parameter \"$name\" must match pattern \"$pattern\", given \"$value\".");
+                }
+            }
+
+            $path = str_replace('{' . $name . '}', $value, $path);
         }
 
-        $callback = $this->processCallback($this->callback);
-
-        // Add application and request as first two arguments
-        array_unshift($arguments, $app, $request);
-
-        // Execute the callback
-        $response = call_user_func_array($callback, $arguments);
-
-        // If callback returns a string, use it to construct a Response
-        if (is_string($response)) {
-            $response = new Response($response, Response::HTTP_OK, ['Content-Type' => 'text/html']);
-        }
-
-        // Call after
-        foreach ($this->after as $after) {
-            $after($app, $request, $response);
-        }
-
-        return $response;
+        return $path;
     }
 
     // -- Builder methods ------------------------------------------------------
-
-    /** Adds a callback to execute before the request. */
-    public function before($callback)
-    {
-        $this->before[] = $callback;
-
-        return $this;
-    }
-
-    /** Adds a callback to execute after the request. */
-    public function after(callable $callback)
-    {
-        $this->after[] = $callback;
-
-        return $this;
-    }
 
     /** Sets the route's HTTP method. */
     public function method($method)
@@ -205,34 +214,20 @@ class Route
         return $this;
     }
 
-    public function validate($field, $validator)
+    /** Set the route name. */
+    public function name($name)
     {
-        if (is_callable($validator)) {
-            $this->fieldValidators[$field][] = $validator;
-        } elseif ($validator instanceof Validator) {
-            $this->fieldValidators[$field][] = [$validator, 'validate'];
-        } else {
-            throw new \InvalidArgumentException("Validator must be callable or implement ValidatorInterface");
-        }
+        $this->name = $name;
 
         return $this;
     }
 
-    public function validateLength($field, $max, $min = 0)
+    // -- Accessor methods ------------------------------------------------------
+
+    public function getCallback()
     {
-        $validator = new StringLengthValidator($max, $min);
-
-        return $this->validateValidator($field, $validator);
+        return $this->callback;
     }
-
-    public function validateValidator($field, Validator $validator)
-    {
-        $this->fieldValidators[$field][] = [$validator, 'validate'];
-
-        return $this;
-    }
-
-    // -- Accesor methods ------------------------------------------------------
 
     public function getPath()
     {
@@ -242,7 +237,7 @@ class Route
     public function getRegexPattern()
     {
         if (!isset($this->pattern)) {
-            $this->pattern = $this->processPath($this->path, $this->asserts);
+            $this->pattern = $this->compileRegex();
         }
 
         return $this->pattern;
@@ -253,11 +248,45 @@ class Route
         return $this->method;
     }
 
+    public function getBefore()
+    {
+        return $this->before;
+    }
+
+    public function getAfter()
+    {
+        return $this->after;
+    }
+
+    public function getPrefix()
+    {
+        return $this->prefix;
+    }
+
+    public function getAsserts()
+    {
+        return $this->asserts;
+    }
+
+    public function getName()
+    {
+        return $this->name;
+    }
+
     // -- Private methods ------------------------------------------------------
 
-    private function processPath($path, $asserts)
+    /**
+     * Compiles a regex pattern which matches this route.
+     */
+    private function compileRegex()
     {
-        $callback = function($matches) use ($asserts) {
+        // Prepend the prefix
+        $path = $this->prefix . $this->path;
+
+        $asserts = $this->asserts;
+
+        // Replace placeholders in curly braces with named regex groups
+        $callback = function ($matches) use ($asserts) {
             $name = $matches[1];
             $pattern = isset($asserts[$name]) ? $asserts[$name] : ".+";
 
@@ -266,92 +295,13 @@ class Route
 
         $pattern = preg_replace_callback('/{([^}]+)}/', $callback, $path);
 
-        // Prepend the prefix
-        $pattern = $this->prefix . $pattern;
-
         // Avoid double slashes
         $pattern = preg_replace('/\/+/', '/', $pattern);
 
         // Escape slashes, used as delimiter in regex
-        $pattern = str_replace('/','\\/', $pattern);
+        $pattern = str_replace('/', '\\/', $pattern);
 
         // Add start and and delimiters
         return "/^$pattern$/";
-    }
-
-    /**
-     * Parses the given callback and returns a callable.
-     *
-     * @param  string|callable $callback
-     * @return callable
-     */
-    private function processCallback($callback)
-    {
-        if (is_string($callback) && strpos($callback, '::') !== false) {
-            $callback = $this->parseClassCallback($callback);
-        }
-
-        if (!is_callable($callback)) {
-            throw new \Exception("Invalid callback: $callback");
-        }
-
-        return $callback;
-    }
-
-    /**
-     * Parses a string like "SomeClass::someMethod" and returns a corresponding
-     * callable array for method someMehod on a new instance of SomeClass.
-     */
-    private function parseClassCallback($callback)
-    {
-        list($class, $method) = explode('::', $callback);
-
-        if (!class_exists($class)) {
-            throw new \Exception("Class $class does not exist.");
-        }
-
-        $object = new $class();
-
-        if (!method_exists($object, $method)) {
-            throw new \Exception("Method $class::$method does not exist.");
-        }
-
-        return [$object, $method];
-    }
-
-    private function validateRequest(Request $request, array $arguments)
-    {
-        $this->validateMethod($request);
-        $this->validateFields($request, $arguments);
-    }
-
-    private function validateMethod(Request $request)
-    {
-        $method = $request->getMethod();
-        if ($method !== $this->method) {
-            throw new \UnexpectedValueException("Method: $method not allowed for this request.");
-        }
-    }
-
-    private function validateFields(Request $request, array $arguments)
-    {
-        foreach ($this->fieldValidators as $field => $validators) {
-
-            if (!isset($arguments[$field])) {
-                throw new \Exception("Field [$field] missing in request.");
-            }
-
-            $value = $arguments[$field];
-
-            foreach ($validators as $validator) {
-
-                try {
-                    $validator($value);
-                } catch (\Exception $ex) {
-                    $msg = $ex->getMessage();
-                    throw new \Exception("Field \"$field\" failed validation: $msg");
-                }
-            }
-        }
     }
 }
